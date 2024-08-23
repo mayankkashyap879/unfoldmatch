@@ -19,6 +19,9 @@ const Navbar = () => {
               <Link href="/profile" className="text-white mr-4">
                 Profile
               </Link>
+              <Link href="/matches" className="text-white mr-4">
+                Matches
+              </Link>
               <button onClick={logout} className="text-white">
                 Logout
               </button>

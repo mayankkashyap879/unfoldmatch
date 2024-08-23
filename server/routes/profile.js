@@ -34,14 +34,16 @@ router.put('/', auth, async (req, res) => {
     const updateData = {
       bio,
       interests,
-      purpose,
       age,
-      gender,
       searchGlobally,
       country,
       personalityType,
       preferences
     };
+
+    // Only include purpose and gender if they are defined
+    if (purpose !== undefined) updateData.purpose = purpose;
+    if (gender !== undefined) updateData.gender = gender;
 
     // Remove undefined fields
     Object.keys(updateData).forEach(key => updateData[key] === undefined && delete updateData[key]);

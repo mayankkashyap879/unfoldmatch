@@ -35,6 +35,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           // For now, we'll assume the token is valid if it exists
           setUser(JSON.parse(storedUser));
         } catch (error) {
+          console.error('Error parsing stored user data:', error);
           // If there's an error, clear the potentially corrupted data
           localStorage.removeItem('token');
           localStorage.removeItem('user');

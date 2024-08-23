@@ -8,7 +8,7 @@ import { useToast } from "@/components/ui/use-toast";
 import { Loader2 } from "lucide-react";
 
 export default function ProfilePage() {
-  const { user } = useAuth();
+  const { user, isLoading: authLoading } = useAuth();
   const [profile, setProfile] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const { toast } = useToast();
@@ -42,8 +42,12 @@ export default function ProfilePage() {
   };
 
   useEffect(() => {
-    fetchProfile();
-  }, [user]);
+    if (!authLoading && user) {
+      fetchProfile();
+    } else if (!authLoading && !user) {
+      setIsLoading(false);
+    }
+  }, [user, authLoading]);
 
   const handleProfileUpdate = async (updatedProfile) => {
     try {
@@ -77,7 +81,7 @@ export default function ProfilePage() {
     }
   };
 
-  if (isLoading) {
+  if (authLoading || isLoading) {
     return (
       <div className="flex justify-center items-center h-screen">
         <Loader2 className="h-8 w-8 animate-spin" />
@@ -88,7 +92,6 @@ export default function ProfilePage() {
   return (
     <ProtectedRoute>
       <div className="container mx-auto px-4 py-8">
-        {/* <h1 className="text-3xl font-bold mb-4">Your Profile</h1> */}
         {profile ? (
           <ProfileForm profile={profile} onSubmit={handleProfileUpdate} />
         ) : (
