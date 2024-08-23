@@ -127,7 +127,7 @@ const ProfileForm = ({ profile, onSubmit }) => {
   };
 
   return (
-    <Card className="w-full max-w-lg mx-auto">
+    <Card className="w-full max-w-md mx-auto">
       <CardHeader>
         <CardTitle>Your Profile</CardTitle>
       </CardHeader>
