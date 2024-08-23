@@ -1,5 +1,7 @@
+// client/app/layout.tsx
 import { AuthProvider } from '../components/AuthProvider'
 import './globals.css'
+import Navbar from '../components/Navbar';
 
 export const metadata = {
   title: 'UnfoldMatch',
@@ -15,6 +17,7 @@ export default function RootLayout({
     <html lang="en">
       <body>
         <AuthProvider>
+          <Navbar />
           {children}
         </AuthProvider>
       </body>

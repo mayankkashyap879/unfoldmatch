@@ -1,48 +1,72 @@
+// client/components/AuthProvider.tsx
 'use client';
 
-import { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { useRouter } from 'next/navigation';
 
-type User = {
+interface User {
   id: string;
   email: string;
-  // Add other user properties as needed
-};
+  username: string;
+}
 
-type AuthContextType = {
+interface AuthContextType {
   user: User | null;
-  login: (token: string) => void;
+  login: (token: string, user: User) => void;
   logout: () => void;
-};
+  isLoading: boolean;
+}
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-export function AuthProvider({ children }: { children: React.ReactNode }) {
+export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const router = useRouter();
 
   useEffect(() => {
-    // Check for token in localStorage and validate it
-    const token = localStorage.getItem('token');
-    if (token) {
-      // Validate token and set user
-      // This is where you'd typically make an API call to validate the token
-      // and get the user data
-      setUser({ id: '1', email: 'user@example.com' }); // Replace with actual user data
-    }
+    const initializeAuth = async () => {
+      const token = localStorage.getItem('token');
+      if (token) {
+        try {
+          // In a real app, you'd validate the token with your backend here
+          const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/auth/validate`, {
+            headers: {
+              'Authorization': `Bearer ${token}`
+            }
+          });
+          
+          if (response.ok) {
+            const userData = await response.json();
+            setUser(userData);
+          } else {
+            // If token is invalid, clear it
+            localStorage.removeItem('token');
+          }
+        } catch (error) {
+          console.error('Error validating token:', error);
+        }
+      }
+      setIsLoading(false);
+    };
+
+    initializeAuth();
   }, []);
 
-  const login = (token: string) => {
+  const login = (token: string, userData: User) => {
     localStorage.setItem('token', token);
-    // Set user data based on the token
-    setUser({ id: '1', email: 'user@example.com' }); // Replace with actual user data
+    setUser(userData);
+    router.push('/profile');
   };
 
   const logout = () => {
     localStorage.removeItem('token');
     setUser(null);
+    router.push('/');
   };
 
   return (
-    <AuthContext.Provider value={{ user, login, logout }}>
+    <AuthContext.Provider value={{ user, login, logout, isLoading }}>
       {children}
     </AuthContext.Provider>
   );

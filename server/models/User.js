@@ -1,3 +1,4 @@
+// server/models/User.js
 const mongoose = require('mongoose');
 const bcrypt = require('bcryptjs');
 
@@ -30,10 +31,10 @@ const UserSchema = new mongoose.Schema({
   interests: [{
     type: String,
   }],
-  relationshipStage: {
+  relationshipGoals: {
     type: String,
-    enum: ['anonymous', 'friendship', 'dating'],
-    default: 'anonymous',
+    enum: ['friendship', 'casual', 'longTerm'],
+    default: 'friendship',
   },
   createdAt: {
     type: Date,
@@ -41,7 +42,6 @@ const UserSchema = new mongoose.Schema({
   },
 });
 
-// Hash password before saving
 UserSchema.pre('save', async function(next) {
   if (!this.isModified('password')) return next();
   
@@ -54,9 +54,12 @@ UserSchema.pre('save', async function(next) {
   }
 });
 
-// Method to compare passwords
 UserSchema.methods.comparePassword = async function(candidatePassword) {
-  return bcrypt.compare(candidatePassword, this.password);
+  try {
+    return await bcrypt.compare(candidatePassword, this.password);
+  } catch (error) {
+    throw error;
+  }
 };
 
 const User = mongoose.model('User', UserSchema);

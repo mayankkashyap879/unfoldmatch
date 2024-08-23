@@ -1,11 +1,9 @@
 // server/routes/profile.js
 const express = require('express');
-const User = require('../models/User');
-const auth = require('../middleware/auth');
-
 const router = express.Router();
+const auth = require('../middleware/auth');
+const User = require('../models/User');
 
-// Get user profile
 router.get('/', auth, async (req, res) => {
   try {
     const user = await User.findById(req.user.userId).select('-password');
@@ -14,18 +12,18 @@ router.get('/', auth, async (req, res) => {
     }
     res.json(user);
   } catch (error) {
+    console.error('Error fetching profile:', error);
     res.status(500).json({ message: 'Server error', error: error.message });
   }
 });
 
-// Update user profile
 router.put('/', auth, async (req, res) => {
   try {
-    const { bio, interests, relationshipStage } = req.body;
+    const { bio, interests, relationshipGoals } = req.body;
     const user = await User.findByIdAndUpdate(
       req.user.userId,
-      { bio, interests, relationshipStage },
-      { new: true }
+      { bio, interests, relationshipGoals },
+      { new: true, runValidators: true }
     ).select('-password');
     
     if (!user) {
@@ -33,6 +31,7 @@ router.put('/', auth, async (req, res) => {
     }
     res.json(user);
   } catch (error) {
+    console.error('Error updating profile:', error);
     res.status(500).json({ message: 'Server error', error: error.message });
   }
 });

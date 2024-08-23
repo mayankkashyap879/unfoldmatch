@@ -1,60 +1,72 @@
 // client/app/auth/login/page.tsx
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import { useAuth } from '../../../components/AuthProvider';
+import { LoginForm } from '../../../components/Auth/LoginForm'
 
 export default function Login() {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+  const [error, setError] = useState('');
+  const [isLoading, setIsLoading] = useState(true);
   const router = useRouter();
-  const { login } = useAuth();
+  const { user, login, isLoading: authLoading } = useAuth();
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  useEffect(() => {
+    if (!authLoading) {
+      if (user) {
+        router.push('/profile');
+      } else {
+        setIsLoading(false);
+      }
+    }
+  }, [user, router, authLoading]);
+
+  const handleSubmit = async (identifier: string, password: string) => {
+    setError('');
     try {
       const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/auth/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password }),
+        body: JSON.stringify({ identifier, password }),
       });
       
+      const data = await response.json();
+      
       if (response.ok) {
-        const data = await response.json();
-        login(data.token);
-        router.push('/');
+        login(data.token, {
+          id: data.user.id,
+          email: data.user.email,
+          username: data.user.username
+        });
+        router.push('/profile');
       } else {
-        const errorData = await response.json();
-        console.error('Login failed:', errorData.message);
-        // Handle error (e.g., show error message to user)
+        setError(`Login failed: ${data.message}`);
       }
     } catch (error) {
-      console.error('An error occurred', error);
-      // Handle error (e.g., show error message to user)
+      setError(`An unexpected error occurred: ${error instanceof Error ? error.message : String(error)}`);
     }
   };
 
+  if (isLoading || authLoading) {
+    return <div>Loading...</div>;
+  }
+
   return (
-    <div>
-      <h1>Login</h1>
-      <form onSubmit={handleSubmit}>
-        <input
-          type="email"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          placeholder="Email"
-          required
-        />
-        <input
-          type="password"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          placeholder="Password"
-          required
-        />
-        <button type="submit">Login</button>
-      </form>
+    <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
+      <div className="max-w-md w-full space-y-8">
+        <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
+          Sign in to your account
+        </h2>
+        <LoginForm onSubmit={handleSubmit} error={error} />
+        <div className="text-sm text-center">
+          Don't have an account?{' '}
+          <Link href="/auth/register" className="font-medium text-indigo-600 hover:text-indigo-500">
+            Register
+          </Link>
+        </div>
+      </div>
     </div>
   );
 }

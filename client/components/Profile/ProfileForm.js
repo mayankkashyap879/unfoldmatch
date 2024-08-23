@@ -1,10 +1,11 @@
+// client/components/Profile/ProfileForm.tsx
 import { useState } from 'react';
 
 const ProfileForm = ({ profile, onSubmit }) => {
   const [formData, setFormData] = useState({
     bio: profile.bio || '',
     interests: profile.interests?.join(', ') || '',
-    relationshipGoals: profile.relationshipGoals || '',
+    relationshipGoals: profile.relationshipGoals || 'friendship',
   });
 
   const handleChange = (e) => {
@@ -58,10 +59,9 @@ const ProfileForm = ({ profile, onSubmit }) => {
           value={formData.relationshipGoals}
           onChange={handleChange}
         >
-          <option value="">Select your goal</option>
-          <option value="casual">Casual Dating</option>
-          <option value="longTerm">Long-term Relationship</option>
           <option value="friendship">Friendship</option>
+          <option value="casual">Casual Dating</option>
+          <option value="longTerm">Long-term Dating</option>
         </select>
       </div>
       <button
