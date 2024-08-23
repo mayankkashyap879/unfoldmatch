@@ -25,7 +25,6 @@ export default function ProfilePage() {
       });
       if (response.ok) {
         const data = await response.json();
-        console.log('Fetched profile:', data); // Log fetched profile
         setProfile(data);
       } else {
         throw new Error('Failed to fetch profile');
@@ -58,7 +57,6 @@ export default function ProfilePage() {
       });
       if (response.ok) {
         const data = await response.json();
-        console.log('Updated profile:', data); // Log updated profile
         setProfile(data);
         toast({
           title: "Success",

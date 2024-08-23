@@ -10,7 +10,6 @@ router.get('/', auth, async (req, res) => {
     if (!user) {
       return res.status(404).json({ message: 'User not found' });
     }
-    console.log("Sending profile data:", user);  // Log the user data being sent
     res.json(user);
   } catch (error) {
     console.error('Error fetching profile:', error);
@@ -47,8 +46,6 @@ router.put('/', auth, async (req, res) => {
     // Remove undefined fields
     Object.keys(updateData).forEach(key => updateData[key] === undefined && delete updateData[key]);
 
-    console.log('Updating user profile with data:', updateData); // Log the update data
-
     const user = await User.findByIdAndUpdate(
       req.user.userId,
       updateData,
@@ -58,8 +55,6 @@ router.put('/', auth, async (req, res) => {
     if (!user) {
       return res.status(404).json({ message: 'User not found' });
     }
-
-    console.log('Updated user:', user); // Log the updated user
 
     res.json(user);
   } catch (error) {

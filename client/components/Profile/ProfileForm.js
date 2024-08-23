@@ -36,7 +36,6 @@ const ProfileForm = ({ profile, onSubmit }) => {
 
   useEffect(() => {
     if (profile) {
-      console.log("Received profile data:", profile); // Log received profile data
       setFormData({
         bio: profile.bio || '',
         interests: Array.isArray(profile.interests) ? profile.interests : [profile.interests || ''],
@@ -58,12 +57,7 @@ const ProfileForm = ({ profile, onSubmit }) => {
     }
   }, [profile]);
 
-  useEffect(() => {
-    console.log("Updated formData:", formData); // Log formData after it's been set
-  }, [formData]);
-
   const handleChange = (name, value) => {
-    console.log(`Changing ${name} to:`, value); // Log each change
     setFormData(prevData => ({
       ...prevData,
       [name]: value
@@ -71,7 +65,6 @@ const ProfileForm = ({ profile, onSubmit }) => {
   };
 
   const handlePreferenceChange = (name, value) => {
-    console.log(`Changing preference ${name} to:`, value); // Log each preference change
     setFormData(prevData => ({
       ...prevData,
       preferences: {
@@ -83,13 +76,58 @@ const ProfileForm = ({ profile, onSubmit }) => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    console.log("Submitting form data:", formData); // Log form data on submit
-
-    // ... rest of the submit logic
+  
+    // Validate enum fields
+    const enumFields = ['purpose', 'gender', 'personalityType'];
+    const invalidFields = enumFields.filter(field => formData[field] === '');
+  
+    if (invalidFields.length > 0) {
+      toast({
+        title: "Validation Error",
+        description: `Please select a value for: ${invalidFields.join(', ')}`,
+        variant: "destructive",
+      });
+      return;
+    }
+  
+    if (!formData.searchGlobally && !formData.country) {
+      toast({
+        title: "Validation Error",
+        description: "Please select a country when not searching globally.",
+        variant: "destructive",
+      });
+      return;
+    }
+  
+    const updatedProfile = {
+      ...formData,
+      interests: Array.isArray(formData.interests) ? formData.interests : formData.interests.split(',').map(i => i.trim()),
+      preferences: {
+        ...formData.preferences,
+        ageRange: {
+          min: formData.preferences.ageRange[0],
+          max: formData.preferences.ageRange[1]
+        }
+      }
+    };
+  
+    try {
+      await onSubmit(updatedProfile);
+      toast({
+        title: "Success",
+        description: "Profile updated successfully!",
+      });
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to update profile. Please try again.",
+        variant: "destructive",
+      });
+    }
   };
 
   return (
-    <Card className="w-full max-w-md mx-auto">
+    <Card className="w-full max-w-lg mx-auto">
       <CardHeader>
         <CardTitle>Your Profile</CardTitle>
       </CardHeader>
@@ -217,7 +255,7 @@ const ProfileForm = ({ profile, onSubmit }) => {
                     ...props.style,
                     height: '6px',
                     width: '100%',
-                    backgroundColor: '#FFA500'
+                    backgroundColor: '#ccc'
                   }}
                 >
                   {children}
@@ -231,7 +269,7 @@ const ProfileForm = ({ profile, onSubmit }) => {
                     height: '20px',
                     width: '20px',
                     borderRadius: '50%',
-                    backgroundColor: '#FF8C00'
+                    backgroundColor: '#999'
                   }}
                 />
               )}
