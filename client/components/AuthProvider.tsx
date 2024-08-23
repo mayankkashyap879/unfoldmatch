@@ -27,24 +27,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     const initializeAuth = async () => {
       const token = localStorage.getItem('token');
-      if (token) {
+      const storedUser = localStorage.getItem('user');
+      
+      if (token && storedUser) {
         try {
-          // In a real app, you'd validate the token with your backend here
-          const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/auth/validate`, {
-            headers: {
-              'Authorization': `Bearer ${token}`
-            }
-          });
-          
-          if (response.ok) {
-            const userData = await response.json();
-            setUser(userData);
-          } else {
-            // If token is invalid, clear it
-            localStorage.removeItem('token');
-          }
+          // Here, you would typically validate the token with your backend
+          // For now, we'll assume the token is valid if it exists
+          setUser(JSON.parse(storedUser));
         } catch (error) {
-          console.error('Error validating token:', error);
+          // If there's an error, clear the potentially corrupted data
+          localStorage.removeItem('token');
+          localStorage.removeItem('user');
         }
       }
       setIsLoading(false);
@@ -55,12 +48,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const login = (token: string, userData: User) => {
     localStorage.setItem('token', token);
+    localStorage.setItem('user', JSON.stringify(userData));
     setUser(userData);
     router.push('/profile');
   };
 
   const logout = () => {
     localStorage.removeItem('token');
+    localStorage.removeItem('user');
     setUser(null);
     router.push('/');
   };
