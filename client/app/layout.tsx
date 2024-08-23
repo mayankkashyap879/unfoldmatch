@@ -2,6 +2,7 @@
 import { AuthProvider } from '../components/AuthProvider'
 import './globals.css'
 import Navbar from '../components/Navbar';
+import { Toaster } from "@/components/ui/toaster"
 
 export const metadata = {
   title: 'UnfoldMatch',
@@ -19,6 +20,7 @@ export default function RootLayout({
         <AuthProvider>
           <Navbar />
           {children}
+          <Toaster />
         </AuthProvider>
       </body>
     </html>
