@@ -1,3 +1,4 @@
+// client/app/auth/register/page.tsx
 'use client';
 
 import { useState } from 'react';
@@ -14,7 +15,7 @@ export default function Register() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      const response = await fetch('/api/auth/register', {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/auth/register`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ username, email, password }),
@@ -23,15 +24,18 @@ export default function Register() {
       if (response.ok) {
         const data = await response.json();
         login(data.token);
-        router.push('/profile'); // Redirect to profile completion page
+        router.push('/profile');
       } else {
-        // Handle errors
-        console.error('Registration failed');
+        const errorData = await response.json();
+        console.error('Registration failed:', errorData.message);
+        // Handle error (e.g., show error message to user)
       }
     } catch (error) {
       console.error('An error occurred', error);
+      // Handle error (e.g., show error message to user)
     }
   };
+  
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">

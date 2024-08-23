@@ -6,7 +6,10 @@ require('dotenv').config();
 const app = express();
 
 // Middleware
-app.use(cors());
+app.use(cors({
+  origin: 'http://localhost:3000', // Replace with your Next.js app's URL
+  credentials: true,
+}));
 app.use(express.json());
 
 // Connect to MongoDB
@@ -16,6 +19,7 @@ mongoose.connect("mongodb://localhost:27017/unfoldmatch", { useNewUrlParser: tru
 
 // Routes (we'll add these later)
 app.use('/api/auth', require('./routes/auth'));
+app.use('/api/profile', require('./routes/profile'));
 // app.use('/api/users', require('./routes/users'));
 // app.use('/api/chats', require('./routes/chats'));
 

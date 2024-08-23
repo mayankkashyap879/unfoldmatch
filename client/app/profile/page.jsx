@@ -1,3 +1,4 @@
+// client/app/profile/page.jsx
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -9,13 +10,18 @@ export default function ProfilePage() {
   const [profile, setProfile] = useState(null);
 
   useEffect(() => {
-    // Fetch user profile data
     const fetchProfile = async () => {
       try {
-        const response = await fetch('/api/profile');
+        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/profile`, {
+          headers: {
+            'x-auth-token': localStorage.getItem('token')
+          }
+        });
         if (response.ok) {
           const data = await response.json();
           setProfile(data);
+        } else {
+          console.error('Failed to fetch profile');
         }
       } catch (error) {
         console.error('Failed to fetch profile:', error);
@@ -29,15 +35,21 @@ export default function ProfilePage() {
 
   const handleProfileUpdate = async (updatedProfile) => {
     try {
-      const response = await fetch('/api/profile', {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/profile`, {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          'x-auth-token': localStorage.getItem('token')
+        },
         body: JSON.stringify(updatedProfile),
       });
       if (response.ok) {
         const data = await response.json();
         setProfile(data);
         alert('Profile updated successfully!');
+      } else {
+        const errorData = await response.json();
+        alert(`Failed to update profile: ${errorData.message}`);
       }
     } catch (error) {
       console.error('Failed to update profile:', error);

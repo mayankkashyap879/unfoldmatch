@@ -1,3 +1,4 @@
+// client/app/api/profile/route.ts
 import { NextResponse } from 'next/server';
 
 // This is a mock profile. In a real application, you'd fetch this from your database.

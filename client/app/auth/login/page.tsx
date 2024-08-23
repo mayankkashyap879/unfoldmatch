@@ -1,3 +1,4 @@
+// client/app/auth/login/page.tsx
 'use client';
 
 import { useState } from 'react';
@@ -13,8 +14,7 @@ export default function Login() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      // Replace with your actual API endpoint
-      const response = await fetch('/api/auth/login', {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/auth/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, password }),
@@ -25,11 +25,13 @@ export default function Login() {
         login(data.token);
         router.push('/');
       } else {
-        // Handle errors
-        console.error('Login failed');
+        const errorData = await response.json();
+        console.error('Login failed:', errorData.message);
+        // Handle error (e.g., show error message to user)
       }
     } catch (error) {
       console.error('An error occurred', error);
+      // Handle error (e.g., show error message to user)
     }
   };
 
