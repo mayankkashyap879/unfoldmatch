@@ -1,8 +1,9 @@
+// client/app/dashboard/friends/page.tsx
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useAuth } from '../../components/AuthProvider';
-import ProtectedRoute from '../../components/ProtectedRoute';
+import { useAuth } from '../../../components/AuthProvider';
+import ProtectedRoute from '../../../components/ProtectedRoute';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 
@@ -80,7 +81,7 @@ export default function FriendsPage() {
 
   return (
     <ProtectedRoute>
-      <div className="container mx-auto px-4 py-8">
+      <div className="w-full">
         <h1 className="text-2xl font-bold mb-4">Friends</h1>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>

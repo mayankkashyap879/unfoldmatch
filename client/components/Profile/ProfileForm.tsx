@@ -19,11 +19,34 @@ const personalityTypes = [
 const DEFAULT_MIN_AGE = 18;
 const DEFAULT_MAX_AGE = 50;
 
-const ProfileForm = ({ profile, onSubmit }) => {
-  const [formData, setFormData] = useState(() => ({
+interface Profile {
+  bio: string;
+  interests: string[];
+  purpose: string;
+  age: number;
+  gender: string;
+  searchGlobally: boolean;
+  country: string;
+  personalityType: string;
+  preferences: {
+    ageRange: {
+      min: number;
+      max: number;
+    };
+    genderPreference: string[];
+  };
+}
+
+interface ProfileFormProps {
+  profile: Profile;
+  onSubmit: (updatedProfile: Profile) => Promise<void>;
+}
+
+const ProfileForm: React.FC<ProfileFormProps> = ({ profile, onSubmit }) => {
+  const [formData, setFormData] = useState<Profile>(() => ({
     bio: profile?.bio || '',
     interests: Array.isArray(profile?.interests) ? profile.interests : [profile?.interests || ''],
-    purpose: profile?.purpose || profile?.relationshipGoals || '',
+    purpose: profile?.purpose || '',
     age: profile?.age || 18,
     gender: profile?.gender || '',
     searchGlobally: profile?.searchGlobally ?? true,
@@ -31,11 +54,11 @@ const ProfileForm = ({ profile, onSubmit }) => {
     personalityType: profile?.personalityType || '',
     preferences: {
       ageRange: profile?.preferences?.ageRange 
-        ? [
-            Number(profile.preferences.ageRange.min) || DEFAULT_MIN_AGE,
-            Number(profile.preferences.ageRange.max) || DEFAULT_MAX_AGE
-          ]
-        : [DEFAULT_MIN_AGE, DEFAULT_MAX_AGE],
+        ? {
+            min: Number(profile.preferences.ageRange.min) || DEFAULT_MIN_AGE,
+            max: Number(profile.preferences.ageRange.max) || DEFAULT_MAX_AGE
+          }
+        : { min: DEFAULT_MIN_AGE, max: DEFAULT_MAX_AGE },
       genderPreference: Array.isArray(profile?.preferences?.genderPreference)
         ? profile.preferences.genderPreference
         : [profile?.preferences?.genderPreference || ''],
@@ -44,7 +67,7 @@ const ProfileForm = ({ profile, onSubmit }) => {
 
   const { toast } = useToast();
 
-  const updateFormData = useCallback((newProfile) => {
+  const updateFormData = useCallback((newProfile: Partial<Profile>) => {
     if (newProfile) {
       setFormData(prevData => ({
         ...prevData,
@@ -53,10 +76,10 @@ const ProfileForm = ({ profile, onSubmit }) => {
           ...prevData.preferences,
           ...newProfile.preferences,
           ageRange: newProfile.preferences?.ageRange 
-            ? [
-                Number(newProfile.preferences.ageRange.min) || DEFAULT_MIN_AGE,
-                Number(newProfile.preferences.ageRange.max) || DEFAULT_MAX_AGE
-              ]
+            ? {
+                min: Number(newProfile.preferences.ageRange.min) || DEFAULT_MIN_AGE,
+                max: Number(newProfile.preferences.ageRange.max) || DEFAULT_MAX_AGE
+              }
             : prevData.preferences.ageRange,
           genderPreference: Array.isArray(newProfile.preferences?.genderPreference)
             ? newProfile.preferences.genderPreference
@@ -70,31 +93,25 @@ const ProfileForm = ({ profile, onSubmit }) => {
     updateFormData(profile);
   }, [profile, updateFormData]);
 
-  useEffect(() => {
-  }, [formData]);
-
-  const handleChange = (name, value) => {
-    setFormData(prevData => {
-      const newData = {
-        ...prevData,
-        [name]: value
-      };
-      return newData;
-    });
+  const handleChange = (name: keyof Profile, value: any) => {
+    setFormData(prevData => ({
+      ...prevData,
+      [name]: value
+    }));
   };
 
-  const handlePreferenceChange = (name, value) => {
+  const handlePreferenceChange = (name: keyof Profile['preferences'], value: any) => {
     setFormData(prevData => {
       if (name === 'ageRange') {
         // Ensure the values are valid numbers and sorted
-        const sortedValues = value
+        const sortedValues = (value as number[])
           .map(v => Number(v) || DEFAULT_MIN_AGE)
           .sort((a, b) => a - b);
         return {
           ...prevData,
           preferences: {
             ...prevData.preferences,
-            [name]: sortedValues
+            [name]: { min: sortedValues[0], max: sortedValues[1] }
           }
         };
       }
@@ -119,20 +136,10 @@ const ProfileForm = ({ profile, onSubmit }) => {
     });
   };
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     try {
-      const updatedProfile = await onSubmit({
-        ...formData,
-        preferences: {
-          ...formData.preferences,
-          ageRange: {
-            min: formData.preferences.ageRange[0],
-            max: formData.preferences.ageRange[1]
-          }
-        }
-      });
-      updateFormData(updatedProfile); // Update the local state with the returned profile data
+      await onSubmit(formData);
       toast({
         title: "Success",
         description: "Profile updated successfully!",
@@ -274,7 +281,7 @@ const ProfileForm = ({ profile, onSubmit }) => {
               step={1}
               min={DEFAULT_MIN_AGE}
               max={100}
-              values={formData.preferences.ageRange}
+              values={[formData.preferences.ageRange.min, formData.preferences.ageRange.max]}
               onChange={(values) => handlePreferenceChange('ageRange', values)}
               renderTrack={({ props, children }) => (
                 <div
@@ -289,10 +296,9 @@ const ProfileForm = ({ profile, onSubmit }) => {
                   {children}
                 </div>
               )}
-              renderThumb={({ props, index }) => (
+              renderThumb={({ props }) => (
                 <div
                   {...props}
-                  key={index}
                   style={{
                     ...props.style,
                     height: '20px',
@@ -305,25 +311,24 @@ const ProfileForm = ({ profile, onSubmit }) => {
               aria-labelledby="age-preference-label"
             />
             <div className="flex justify-between text-sm">
-              <span>{formData.preferences.ageRange[0]}</span>
-              <span>{formData.preferences.ageRange[1]}</span>
+              <span>{formData.preferences.ageRange.min}</span>
+              <span>{formData.preferences.ageRange.max}</span>
             </div>
           </div>
 
-          {/* Gender Preference field */}
           <div className="space-y-2">
-  <Label>Gender Preference</Label>
-  <ToggleGroup 
-    type="single" 
-    value={formData.preferences.genderPreference[0] || ''} 
-    onValueChange={(value) => handlePreferenceChange('genderPreference', value ? [value] : [])}
-  >
-    <ToggleGroupItem value="male" className="w-full">Male</ToggleGroupItem>
-    <ToggleGroupItem value="female" className="w-full">Female</ToggleGroupItem>
-    <ToggleGroupItem value="non-binary" className="w-full">Non-binary</ToggleGroupItem>
-    <ToggleGroupItem value="other" className="w-full">Other</ToggleGroupItem>
-  </ToggleGroup>
-</div>
+            <Label>Gender Preference</Label>
+            <ToggleGroup 
+              type="single" 
+              value={formData.preferences.genderPreference[0] || ''} 
+              onValueChange={(value) => handlePreferenceChange('genderPreference', value ? [value] : [])}
+            >
+              <ToggleGroupItem value="male" className="w-full">Male</ToggleGroupItem>
+              <ToggleGroupItem value="female" className="w-full">Female</ToggleGroupItem>
+              <ToggleGroupItem value="non-binary" className="w-full">Non-binary</ToggleGroupItem>
+              <ToggleGroupItem value="other" className="w-full">Other</ToggleGroupItem>
+            </ToggleGroup>
+          </div>
 
           <Button type="submit" className="w-full">
             Update Profile

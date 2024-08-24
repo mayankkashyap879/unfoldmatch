@@ -1,15 +1,18 @@
+// client/app/matches/page.tsx
 'use client';
 
 import { useState, useEffect } from 'react';
 import { useAuth } from '../../components/AuthProvider';
 import ProtectedRoute from '../../components/ProtectedRoute';
 import ChatInterface from '../../components/Chat/ChatInterface';
+import { Loader2 } from "lucide-react";
 
 interface Match {
   _id: string;
   username: string;
   compatibilityScore: number;
   expiresAt: string;
+  status: 'active' | 'pending_friendship' | 'friends';
   age?: number;
   bio?: string;
   interests?: string[];
@@ -58,9 +61,17 @@ export default function MatchesPage() {
     fetchMatches();
   }, [user]);
 
+  if (isLoading) {
+    return (
+      <div className="flex justify-center items-center h-[calc(100vh-64px)]">
+        <Loader2 className="h-8 w-8 animate-spin" />
+      </div>
+    );
+  }
+
   if (error) {
     return (
-      <div className="flex justify-center items-center h-screen">
+      <div className="flex justify-center items-center h-[calc(100vh-64px)]">
         <p className="text-red-500">Error: {error}</p>
       </div>
     );
@@ -68,13 +79,9 @@ export default function MatchesPage() {
 
   return (
     <ProtectedRoute>
-      <div className="h-[calc(100vh-64px)]">
-        <ChatInterface 
-          matches={matches}
-          selectedMatch={selectedMatch}
-          setSelectedMatch={setSelectedMatch}
-        />
-      </div>
-    </ProtectedRoute>
+    <div className="fixed top-16 left-0 right-0 bottom-0 bg-background">
+      <ChatInterface initialMatches={matches} />
+    </div>
+  </ProtectedRoute>
   );
 }

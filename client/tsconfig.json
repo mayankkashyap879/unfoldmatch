@@ -21,6 +21,6 @@
       "@/*": ["./*"]
     }
   },
-  "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts", "app/profile/page.jsx", "components/Profile/ProfileForm.js", "app/matches/page.tsx", "components/WebSocketProvider.jsx"],
+  "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts", "app/dashboard/profile/page.tsx", "components/Profile/ProfileForm.tsx", "app/matches/page.tsx", "components/WebSocketProvider.jsx", "components/Chat/ChatInterface.jsx"],
   "exclude": ["node_modules"]
 }

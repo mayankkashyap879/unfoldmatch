@@ -1,4 +1,3 @@
-// client/components/AuthProvider.tsx
 'use client';
 
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
@@ -15,6 +14,7 @@ interface AuthContextType {
   login: (token: string, user: User) => void;
   logout: () => void;
   isLoading: boolean;
+  checkAuth: () => Promise<boolean>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -25,26 +25,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const router = useRouter();
 
   useEffect(() => {
-    const initializeAuth = async () => {
-      const token = localStorage.getItem('token');
-      const storedUser = localStorage.getItem('user');
-      
-      if (token && storedUser) {
-        try {
-          // Here, you would typically validate the token with your backend
-          // For now, we'll assume the token is valid if it exists
-          setUser(JSON.parse(storedUser));
-        } catch (error) {
-          console.error('Error parsing stored user data:', error);
-          // If there's an error, clear the potentially corrupted data
-          localStorage.removeItem('token');
-          localStorage.removeItem('user');
-        }
-      }
-      setIsLoading(false);
-    };
-
-    initializeAuth();
+    checkAuth();
   }, []);
 
   const login = (token: string, userData: User) => {
@@ -61,8 +42,40 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     router.push('/');
   };
 
+  const checkAuth = async (): Promise<boolean> => {
+    setIsLoading(true);
+    const token = localStorage.getItem('token');
+    const storedUser = localStorage.getItem('user');
+
+    if (!token || !storedUser) {
+      setIsLoading(false);
+      return false;
+    }
+
+    try {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/auth/verify`, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+
+      if (response.ok) {
+        setUser(JSON.parse(storedUser));
+        setIsLoading(false);
+        return true;
+      } else {
+        throw new Error('Token validation failed');
+      }
+    } catch (error) {
+      console.error('Authentication check failed:', error);
+      logout();
+      setIsLoading(false);
+      return false;
+    }
+  };
+
   return (
-    <AuthContext.Provider value={{ user, login, logout, isLoading }}>
+    <AuthContext.Provider value={{ user, login, logout, isLoading, checkAuth }}>
       {children}
     </AuthContext.Provider>
   );

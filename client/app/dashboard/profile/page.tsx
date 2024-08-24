@@ -1,15 +1,33 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useAuth } from '../../components/AuthProvider';
-import ProfileForm from '../../components/Profile/ProfileForm';
-import ProtectedRoute from '../../components/ProtectedRoute';
+import { useAuth } from '../../../components/AuthProvider';
+import ProfileForm from '../../../components/Profile/ProfileForm';
+import ProtectedRoute from '../../../components/ProtectedRoute';
 import { useToast } from "@/components/ui/use-toast";
 import { Loader2 } from "lucide-react";
 
+interface Profile {
+  bio: string;
+  interests: string[];
+  purpose: string;
+  age: number;
+  gender: string;
+  searchGlobally: boolean;
+  country: string;
+  personalityType: string;
+  preferences: {
+    ageRange: {
+      min: number;
+      max: number;
+    };
+    genderPreference: string[];
+  };
+}
+
 export default function ProfilePage() {
   const { user, isLoading: authLoading } = useAuth();
-  const [profile, setProfile] = useState(null);
+  const [profile, setProfile] = useState<Profile | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const { toast } = useToast();
 
@@ -49,7 +67,7 @@ export default function ProfilePage() {
     }
   }, [user, authLoading]);
 
-  const handleProfileUpdate = async (updatedProfile) => {
+  const handleProfileUpdate = async (updatedProfile: Profile) => {
     try {
       const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/profile`, {
         method: 'PUT',
@@ -75,7 +93,7 @@ export default function ProfilePage() {
       console.error('Failed to update profile:', error);
       toast({
         title: "Error",
-        description: error.message || "Failed to update profile. Please try again.",
+        description: error instanceof Error ? error.message : "Failed to update profile. Please try again.",
         variant: "destructive",
       });
     }

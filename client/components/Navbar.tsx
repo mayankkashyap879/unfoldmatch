@@ -1,3 +1,4 @@
+// client/Navbar.tsx
 import React from 'react';
 import Link from 'next/link';
 import { Button } from "@/components/ui/button";
@@ -21,7 +22,7 @@ const Navbar: React.FC<NavbarProps> = ({ isDarkMode, toggleTheme }) => {
   const { user, logout } = useAuth();
 
   return (
-    <nav className="flex justify-between items-center p-2 sm:p-4 bg-background text-foreground">
+    <nav className="flex justify-between items-center p-2 sm:p-4 bg-background text-foreground border-b-2 fixed w-full h-16 z-50">
       <Link href="/" className="flex items-center space-x-2">
         <span className="text-xl font-bold pl-4 sm:hidden sm:text-2xl">UM</span>
         <span className="font-bold text-lg sm:text-xl hidden sm:inline">UnfoldMatch</span>
@@ -46,7 +47,7 @@ const Navbar: React.FC<NavbarProps> = ({ isDarkMode, toggleTheme }) => {
               <DropdownMenuLabel>My Account</DropdownMenuLabel>
               <DropdownMenuSeparator />
               <DropdownMenuItem>
-                <Link href="/profile" className="flex items-center">
+                <Link href="/dashboard/profile" className="flex items-center">
                   <User className="mr-2 h-4 w-4" />
                   <span>My Profile</span>
                 </Link>
@@ -76,7 +77,7 @@ const Navbar: React.FC<NavbarProps> = ({ isDarkMode, toggleTheme }) => {
                 </Link>
               </DropdownMenuItem>
               <DropdownMenuItem>
-                <Link href="/friends" className="flex items-center">
+                <Link href="/dashboard/friends" className="flex items-center">
                   <Users className="mr-2 h-4 w-4" />
                   <span>Friends</span>
                 </Link>

@@ -1,3 +1,4 @@
+// server/server.js
 const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
@@ -60,40 +61,67 @@ io.on('connection', (socket) => {
     try {
       const Message = mongoose.model('Message');
       const Match = mongoose.model('Match');
-
+  
       const newMessage = new Message(messageData);
       await newMessage.save();
-
+  
       const match = await Match.findById(messageData.matchId);
       if (match) {
         match.messageCount += 1;
         await match.save();
-
+  
+        const canRequestFriendship = match.messageCount >= CHAT_MILESTONE;
+  
         // Emit updated match status
         io.to(messageData.matchId).emit('match update', {
           matchId: match._id,
           messageCount: match.messageCount,
-          canRequestFriendship: match.messageCount >= CHAT_MILESTONE
+          canRequestFriendship: canRequestFriendship
+        });
+  
+        console.log(`Match ${match._id} message count: ${match.messageCount}`);
+  
+        // Send new message with updated message count
+        io.to(messageData.matchId).emit('new message', {
+          ...newMessage.toObject(),
+          messageCount: match.messageCount,
+          canRequestFriendship: canRequestFriendship
         });
       }
-      io.to(messageData.matchId).emit('new message', newMessage);
-      console.log(`Message sent in chat ${messageData.matchId}`);
     } catch (error) {
       console.error('Error saving/sending message:', error);
     }
   });
 
-  socket.on('request friendship', async (matchId) => {
+  socket.on('request friendship', async ({ matchId, requesterId }) => {
     try {
       const match = await mongoose.model('Match').findById(matchId).populate('users', 'username');
       if (match) {
+        const receiverId = match.users.find(user => user._id.toString() !== requesterId)._id;
         io.to(matchId).emit('friendship requested', {
           matchId: match._id,
-          requester: match.friendshipInitiator
+          requesterId,
+          receiverId
         });
       }
     } catch (error) {
       console.error('Error handling friendship request:', error);
+    }
+  });
+
+  socket.on('friendship response', async ({ matchId, accepted }) => {
+    try {
+      const match = await mongoose.model('Match').findById(matchId);
+      if (match) {
+        match.status = accepted ? 'friends' : 'rejected';
+        await match.save();
+        io.to(matchId).emit('friendship status updated', {
+          matchId: match._id,
+          status: match.status
+        });
+      }
+    } catch (error) {
+      console.error('Error handling friendship response:', error);
     }
   });
 
