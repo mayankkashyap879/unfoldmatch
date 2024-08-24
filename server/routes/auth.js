@@ -3,6 +3,7 @@ const express = require('express');
 const jwt = require('jsonwebtoken');
 const User = require('../models/User');
 const { validateInput } = require('../utils/validation');
+const auth = require('../middleware/auth');
 
 const router = express.Router();
 
@@ -79,6 +80,19 @@ router.post('/reset-password', async (req, res) => {
     res.json({ message: 'Password reset successful' });
   } catch (error) {
     console.error('Password reset error:', error);
+    res.status(500).json({ message: 'Server error', error: error.message });
+  }
+});
+
+router.get('/verify', auth, async (req, res) => {
+  try {
+    const user = await User.findById(req.user.userId).select('-password');
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+    res.json({ user });
+  } catch (error) {
+    console.error('Verification error:', error);
     res.status(500).json({ message: 'Server error', error: error.message });
   }
 });

@@ -6,6 +6,7 @@ const socketIo = require('socket.io');
 const matchesRouter = require('./routes/matches');
 const diagnosticRoutes = require('./routes/diagnostic');
 const friendsRouter = require('./routes/friends');
+// const notificationsRouter = require('./routes/notifications');
 require('dotenv').config();
 
 const app = express();
@@ -37,6 +38,7 @@ app.use('/api/matches', matchesRouter);
 app.use('/api/diagnostic', diagnosticRoutes);
 app.use('/api/messages', require('./routes/messages'));
 app.use('/api/friends', friendsRouter);
+// app.use('/api/notifications', notificationsRouter);
 
 // Basic route for testing
 app.get('/', (req, res) => {
@@ -74,7 +76,6 @@ io.on('connection', (socket) => {
           canRequestFriendship: match.messageCount >= CHAT_MILESTONE
         });
       }
-
       io.to(messageData.matchId).emit('new message', newMessage);
       console.log(`Message sent in chat ${messageData.matchId}`);
     } catch (error) {
