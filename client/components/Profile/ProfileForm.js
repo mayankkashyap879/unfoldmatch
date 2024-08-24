@@ -98,6 +98,17 @@ const ProfileForm = ({ profile, onSubmit }) => {
           }
         };
       }
+      if (name === 'genderPreference') {
+        // Ensure value is always an array
+        const newValue = Array.isArray(value) ? value : [value];
+        return {
+          ...prevData,
+          preferences: {
+            ...prevData.preferences,
+            [name]: newValue
+          }
+        };
+      }
       return {
         ...prevData,
         preferences: {
@@ -298,6 +309,21 @@ const ProfileForm = ({ profile, onSubmit }) => {
               <span>{formData.preferences.ageRange[1]}</span>
             </div>
           </div>
+
+          {/* Gender Preference field */}
+          <div className="space-y-2">
+  <Label>Gender Preference</Label>
+  <ToggleGroup 
+    type="single" 
+    value={formData.preferences.genderPreference[0] || ''} 
+    onValueChange={(value) => handlePreferenceChange('genderPreference', value ? [value] : [])}
+  >
+    <ToggleGroupItem value="male" className="w-full">Male</ToggleGroupItem>
+    <ToggleGroupItem value="female" className="w-full">Female</ToggleGroupItem>
+    <ToggleGroupItem value="non-binary" className="w-full">Non-binary</ToggleGroupItem>
+    <ToggleGroupItem value="other" className="w-full">Other</ToggleGroupItem>
+  </ToggleGroup>
+</div>
 
           <Button type="submit" className="w-full">
             Update Profile

@@ -12,13 +12,18 @@ interface MatchCardProps {
     purpose?: string;
     personalityType?: string;
   };
+  isSelected: boolean;
+  onClick: () => void;
 }
 
-const MatchCard: React.FC<MatchCardProps> = ({ match }) => {
+const MatchCard: React.FC<MatchCardProps> = ({ match, isSelected, onClick }) => {
   const isFriend = 'age' in match;
 
   return (
-    <Card>
+    <Card 
+      className={`cursor-pointer transition-all ${isSelected ? 'border-blue-500 border-2' : ''}`}
+      onClick={onClick}
+    >
       <CardHeader>
         <CardTitle>{match.username}</CardTitle>
       </CardHeader>

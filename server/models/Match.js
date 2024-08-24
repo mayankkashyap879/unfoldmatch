@@ -2,17 +2,15 @@ const mongoose = require('mongoose');
 
 const MatchSchema = new mongoose.Schema({
   users: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
-  messages: [{
-    sender: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
-    content: String,
-    timestamp: { type: Date, default: Date.now }
-  }],
   status: {
     type: String,
-    enum: ['active', 'inactive'],
+    enum: ['active', 'pending_friendship', 'friends', 'rejected', 'expired'],
     default: 'active'
   },
-  createdAt: { type: Date, default: Date.now }
+  messageCount: { type: Number, default: 0 },
+  friendshipInitiator: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+  createdAt: { type: Date, default: Date.now },
+  expiresAt: { type: Date, required: true }
 });
 
 module.exports = mongoose.model('Match', MatchSchema);

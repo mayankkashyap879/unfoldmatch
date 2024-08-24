@@ -1,4 +1,3 @@
-// client/components/Navbar.tsx
 'use client';
 
 import Link from 'next/link';
@@ -21,6 +20,9 @@ const Navbar = () => {
               </Link>
               <Link href="/matches" className="text-white mr-4">
                 Matches
+              </Link>
+              <Link href="/friends" className="text-white mr-4">
+                Friends
               </Link>
               <button onClick={logout} className="text-white">
                 Logout
