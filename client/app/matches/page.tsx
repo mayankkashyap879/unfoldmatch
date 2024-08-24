@@ -3,9 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '../../components/AuthProvider';
 import ProtectedRoute from '../../components/ProtectedRoute';
-import MatchCard from '../../components/Matches/MatchCard';
 import ChatInterface from '../../components/Chat/ChatInterface';
-import { Loader2 } from "lucide-react";
 
 interface Match {
   _id: string;
@@ -40,7 +38,7 @@ export default function MatchesPage() {
         });
         if (response.ok) {
           const data = await response.json();
-          console.log('Matches data:', data); // Log the received data
+          console.log('Matches data:', data);
           setMatches(data.matches || []);
           if (data.matches && data.matches.length > 0 && !selectedMatch) {
             setSelectedMatch(data.matches[0]);
@@ -60,14 +58,6 @@ export default function MatchesPage() {
     fetchMatches();
   }, [user]);
 
-  if (isLoading) {
-    return (
-      <div className="flex justify-center items-center h-screen">
-        <Loader2 className="h-8 w-8 animate-spin" />
-      </div>
-    );
-  }
-
   if (error) {
     return (
       <div className="flex justify-center items-center h-screen">
@@ -78,32 +68,12 @@ export default function MatchesPage() {
 
   return (
     <ProtectedRoute>
-      <div className="container mx-auto px-4 py-8 flex">
-        <div className="w-1/3 pr-4">
-          <h1 className="text-2xl font-bold mb-4">Your Matches</h1>
-          {matches.length > 0 ? (
-            matches.map(match => (
-              <div key={match._id} className="mb-4">
-                <MatchCard 
-                  match={match} 
-                  isSelected={selectedMatch?._id === match._id}
-                  onClick={() => setSelectedMatch(match)}
-                />
-              </div>
-            ))
-          ) : (
-            <p>No matches available at the moment. We're working on finding your perfect match!</p>
-          )}
-        </div>
-        <div className="w-2/3 pl-4">
-          {selectedMatch ? (
-            <ChatInterface matchId={selectedMatch._id} expiresAt={selectedMatch.expiresAt} />
-          ) : (
-            <div className="flex items-center justify-center h-full">
-              <p>{matches.length > 0 ? "Select a match to start chatting!" : "No matches available for chat yet."}</p>
-            </div>
-          )}
-        </div>
+      <div className="h-[calc(100vh-64px)]">
+        <ChatInterface 
+          matches={matches}
+          selectedMatch={selectedMatch}
+          setSelectedMatch={setSelectedMatch}
+        />
       </div>
     </ProtectedRoute>
   );
