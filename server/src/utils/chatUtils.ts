@@ -1,7 +1,7 @@
 // server/utils/chatUtils.ts
 
 import { CHAT_MILESTONE } from '../config';
-import { IMatch, IPopulatedMatch, IUser } from '../types/chat';
+import { IMatch, IPopulatedMatch } from '../types/chat';
 
 export const canRequestFriendship = (match: IMatch | IPopulatedMatch): boolean => {
   return match.messageCount >= CHAT_MILESTONE;

@@ -1,9 +1,8 @@
 // server/services/friendsService.ts
 
 import { User, IUser } from '../models/User';
-import { Match, IMatch } from '../models/Match';
+import { Match } from '../models/Match';
 import { FriendInfo, PendingFriendship } from '../types/friends';
-import mongoose from 'mongoose';
 
 export const getUserFriends = async (userId: string): Promise<FriendInfo[]> => {
   const user = await User.findById(userId).populate<{ friends: IUser[] }>('friends', 'username');

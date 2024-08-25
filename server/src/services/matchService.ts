@@ -2,7 +2,7 @@
 
 import mongoose from 'mongoose';
 import { User, IUser } from '../models/User';
-import { Match, IMatch } from '../models/Match';
+import { Match } from '../models/Match';
 import { MATCH_DURATION, CHAT_MILESTONE, MAX_ACTIVE_MATCHES } from '../config/constants';
 
 function isIUser(user: mongoose.Types.ObjectId | IUser): user is IUser {

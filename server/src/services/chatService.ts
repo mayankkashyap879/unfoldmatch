@@ -1,7 +1,7 @@
 // server/services/chatService.ts
 
 import { Server as SocketIOServer } from 'socket.io';
-import { IMessage, IMatch } from '../types/chat';
+import { IMessage } from '../types/chat';
 import { saveMessage, updateMatchMessageCount, findMatchWithUsers, updateMatchStatus } from '../db/chatOperations';
 import { canRequestFriendship, getOtherUserId } from '../utils/chatUtils';
 
