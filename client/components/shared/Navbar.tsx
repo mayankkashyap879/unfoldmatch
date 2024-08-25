@@ -3,7 +3,7 @@ import React from 'react';
 import Link from 'next/link';
 import { Button } from "@/components/ui/button";
 import { Bell, Mail, Settings, Sun, Moon, LogOut, User, Users } from "lucide-react";
-import { useAuth } from './AuthProvider';
+import { useAuth } from '@/hooks/useAuth';
 import {
   DropdownMenu,
   DropdownMenuContent,

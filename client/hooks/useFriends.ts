@@ -1,32 +1,13 @@
-// client/app/dashboard/friends/page.tsx
-'use client';
+// hooks/useFriends.ts
 
 import { useState, useEffect } from 'react';
+import { Friend, PendingFriendship } from '@/types/friend';
 import { useAuth } from '@/hooks/useAuth';
-import ProtectedRoute from '@/components/shared/ProtectedRoute';
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 
-interface Friend {
-  _id: string;
-  username: string;
-}
-
-interface PendingFriendship {
-  _id: string;
-  username: string;
-  matchId: string;
-}
-
-export default function FriendsPage() {
+export const useFriends = () => {
   const [friends, setFriends] = useState<Friend[]>([]);
   const [pendingFriendships, setPendingFriendships] = useState<PendingFriendship[]>([]);
   const { user } = useAuth();
-
-  useEffect(() => {
-    fetchFriends();
-    fetchPendingFriendships();
-  }, [user]);
 
   const fetchFriends = async () => {
     try {
@@ -79,35 +60,12 @@ export default function FriendsPage() {
     }
   };
 
-  return (
-    <ProtectedRoute>
-      <div className="w-full">
-        <h1 className="text-2xl font-bold mb-4">Friends</h1>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div>
-            <h2 className="text-xl font-semibold mb-2">Your Friends</h2>
-            {friends.map(friend => (
-              <Card key={friend._id} className="mb-2">
-                <CardContent>{friend.username}</CardContent>
-              </Card>
-            ))}
-          </div>
-          <div>
-            <h2 className="text-xl font-semibold mb-2">Pending Friendships</h2>
-            {pendingFriendships.map(pending => (
-              <Card key={pending._id} className="mb-2">
-                <CardHeader>
-                  <CardTitle>{pending.username}</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <Button onClick={() => respondToFriendship(pending.matchId, true)} className="mr-2">Accept</Button>
-                  <Button onClick={() => respondToFriendship(pending.matchId, false)} variant="destructive">Reject</Button>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        </div>
-      </div>
-    </ProtectedRoute>
-  );
-}
+  useEffect(() => {
+    if (user) {
+      fetchFriends();
+      fetchPendingFriendships();
+    }
+  }, [user]);
+
+  return { friends, pendingFriendships, respondToFriendship };
+};

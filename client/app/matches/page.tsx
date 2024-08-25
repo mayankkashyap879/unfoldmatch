@@ -2,9 +2,9 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useAuth } from '../../components/AuthProvider';
-import ProtectedRoute from '../../components/ProtectedRoute';
-import ChatInterface from '../../components/Chat/ChatInterface';
+import { useAuth } from '@/hooks/useAuth';
+import ProtectedRoute from '@/components/shared/ProtectedRoute';
+import ChatInterface from '@/components/chat/ChatInterface';
 import { Loader2 } from "lucide-react";
 
 interface Match {

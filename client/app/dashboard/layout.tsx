@@ -1,13 +1,27 @@
-// client/app/dashboard/layout.tsx
-import SideNav from '@/components/Dashboard/SideNav'
- 
-export default function Layout({ children }: { children: React.ReactNode }) {
+// app/layout.tsx
+'use client';
+
+import { AuthProvider } from '@/contexts/AuthContext';
+import '@/styles/globals.css';
+import Navbar from '@/components/shared/Navbar';
+import { Toaster } from "@/components/ui/toaster"
+import { useTheme } from '@/hooks/useTheme';
+import { RootLayoutProps } from '@/types/layout';
+
+export default function RootLayout({ children }: RootLayoutProps) {
+  const { isDarkMode, toggleTheme } = useTheme();
+
   return (
-    <div className="flex min-h-screen pt-16">
-      <SideNav />
-      <div className="flex-grow ml-64 p-6 md:p-12">
-        {children}
-      </div>
-    </div>
-  );
+    <html lang="en" className={isDarkMode ? 'dark' : ''}>
+      <body className={`min-h-screen bg-background font-sans antialiased ${isDarkMode ? 'dark' : ''}`}>
+        <AuthProvider>
+          <Navbar isDarkMode={isDarkMode} toggleTheme={toggleTheme} />
+          <main className="">
+            {children}
+          </main>
+          <Toaster />
+        </AuthProvider>
+      </body>
+    </html>
+  )
 }

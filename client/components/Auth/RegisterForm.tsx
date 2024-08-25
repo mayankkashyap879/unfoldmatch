@@ -1,20 +1,13 @@
-// client/components/Auth/RegisterForm.tsx
-import React, { useState } from 'react';
+// components/Auth/RegisterForm.tsx
 
-interface RegisterFormProps {
-  onSubmit: (username: string, email: string, password: string) => void;
-  error: string;
-}
+import React from 'react';
+import { RegisterFormProps } from '../../types/auth';
+import { useRegisterForm } from '../../hooks/useRegisterForm';
 
-export const RegisterForm: React.FC<RegisterFormProps> = ({ onSubmit, error }) => {
-  const [username, setUsername] = useState('');
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    onSubmit(username, email, password);
-  };
+export const RegisterForm: React.FC<RegisterFormProps> = ({ onSubmit, error } : RegisterFormProps) => {
+  const { formData, handleChange, handleSubmit } = useRegisterForm((data) => {
+    onSubmit(data.username, data.email, data.password);
+  });
 
   return (
     <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
@@ -31,8 +24,8 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ onSubmit, error }) =
             required
             className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-t-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
             placeholder="Username"
-            value={username}
-            onChange={(e) => setUsername(e.target.value)}
+            value={formData.username}
+            onChange={handleChange}
           />
         </div>
         <div>
@@ -47,8 +40,8 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ onSubmit, error }) =
             required
             className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
             placeholder="Email address"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
+            value={formData.email}
+            onChange={handleChange}
           />
         </div>
         <div>
@@ -63,8 +56,8 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ onSubmit, error }) =
             required
             className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-b-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
             placeholder="Password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
+            value={formData.password}
+            onChange={handleChange}
           />
         </div>
       </div>

@@ -1,5 +1,5 @@
-import React, { useState, useEffect, useCallback } from 'react';
-import { Range, getTrackBackground } from 'react-range';
+import React, { ReactNode } from 'react';
+import { Range } from 'react-range';
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -8,133 +8,13 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { useToast } from "@/components/ui/use-toast";
+import { Profile, ProfileFormProps } from '@/types/profile';
+import { useProfileForm } from '@/hooks/useProfileForm';
+import { countries, personalityTypes, DEFAULT_MIN_AGE } from '@/utils/constants';
 
-const countries = ["United States", "Canada", "United Kingdom", "Australia", "Germany", "France", "Japan", "Brazil", "India", "China"];
-
-const personalityTypes = [
-  'INTJ', 'INTP', 'ENTJ', 'ENTP', 'INFJ', 'INFP', 'ENFJ', 'ENFP',
-  'ISTJ', 'ISFJ', 'ESTJ', 'ESFJ', 'ISTP', 'ISFP', 'ESTP', 'ESFP'
-];
-
-const DEFAULT_MIN_AGE = 18;
-const DEFAULT_MAX_AGE = 50;
-
-interface Profile {
-  bio: string;
-  interests: string[];
-  purpose: string;
-  age: number;
-  gender: string;
-  searchGlobally: boolean;
-  country: string;
-  personalityType: string;
-  preferences: {
-    ageRange: {
-      min: number;
-      max: number;
-    };
-    genderPreference: string[];
-  };
-}
-
-interface ProfileFormProps {
-  profile: Profile;
-  onSubmit: (updatedProfile: Profile) => Promise<void>;
-}
-
-const ProfileForm: React.FC<ProfileFormProps> = ({ profile, onSubmit }) => {
-  const [formData, setFormData] = useState<Profile>(() => ({
-    bio: profile?.bio || '',
-    interests: Array.isArray(profile?.interests) ? profile.interests : [profile?.interests || ''],
-    purpose: profile?.purpose || '',
-    age: profile?.age || 18,
-    gender: profile?.gender || '',
-    searchGlobally: profile?.searchGlobally ?? true,
-    country: profile?.country || '',
-    personalityType: profile?.personalityType || '',
-    preferences: {
-      ageRange: profile?.preferences?.ageRange 
-        ? {
-            min: Number(profile.preferences.ageRange.min) || DEFAULT_MIN_AGE,
-            max: Number(profile.preferences.ageRange.max) || DEFAULT_MAX_AGE
-          }
-        : { min: DEFAULT_MIN_AGE, max: DEFAULT_MAX_AGE },
-      genderPreference: Array.isArray(profile?.preferences?.genderPreference)
-        ? profile.preferences.genderPreference
-        : [profile?.preferences?.genderPreference || ''],
-    }
-  }));
-
+const ProfileForm: React.FC<ProfileFormProps> = ({ profile, onSubmit }: ProfileFormProps) => {
+  const { formData, handleChange, handlePreferenceChange } = useProfileForm(profile);
   const { toast } = useToast();
-
-  const updateFormData = useCallback((newProfile: Partial<Profile>) => {
-    if (newProfile) {
-      setFormData(prevData => ({
-        ...prevData,
-        ...newProfile,
-        preferences: {
-          ...prevData.preferences,
-          ...newProfile.preferences,
-          ageRange: newProfile.preferences?.ageRange 
-            ? {
-                min: Number(newProfile.preferences.ageRange.min) || DEFAULT_MIN_AGE,
-                max: Number(newProfile.preferences.ageRange.max) || DEFAULT_MAX_AGE
-              }
-            : prevData.preferences.ageRange,
-          genderPreference: Array.isArray(newProfile.preferences?.genderPreference)
-            ? newProfile.preferences.genderPreference
-            : [newProfile.preferences?.genderPreference || ''],
-        }
-      }));
-    }
-  }, []);
-
-  useEffect(() => {
-    updateFormData(profile);
-  }, [profile, updateFormData]);
-
-  const handleChange = (name: keyof Profile, value: any) => {
-    setFormData(prevData => ({
-      ...prevData,
-      [name]: value
-    }));
-  };
-
-  const handlePreferenceChange = (name: keyof Profile['preferences'], value: any) => {
-    setFormData(prevData => {
-      if (name === 'ageRange') {
-        // Ensure the values are valid numbers and sorted
-        const sortedValues = (value as number[])
-          .map(v => Number(v) || DEFAULT_MIN_AGE)
-          .sort((a, b) => a - b);
-        return {
-          ...prevData,
-          preferences: {
-            ...prevData.preferences,
-            [name]: { min: sortedValues[0], max: sortedValues[1] }
-          }
-        };
-      }
-      if (name === 'genderPreference') {
-        // Ensure value is always an array
-        const newValue = Array.isArray(value) ? value : [value];
-        return {
-          ...prevData,
-          preferences: {
-            ...prevData.preferences,
-            [name]: newValue
-          }
-        };
-      }
-      return {
-        ...prevData,
-        preferences: {
-          ...prevData.preferences,
-          [name]: value
-        }
-      };
-    });
-  };
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -166,7 +46,7 @@ const ProfileForm: React.FC<ProfileFormProps> = ({ profile, onSubmit }) => {
               id="bio"
               name="bio"
               value={formData.bio}
-              onChange={(e) => handleChange('bio', e.target.value)}
+              onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => handleChange('bio', e.target.value)}
               rows={3}
             />
           </div>
@@ -177,7 +57,7 @@ const ProfileForm: React.FC<ProfileFormProps> = ({ profile, onSubmit }) => {
               id="interests"
               name="interests"
               value={formData.interests.join(', ')}
-              onChange={(e) => handleChange('interests', e.target.value.split(',').map(i => i.trim()))}
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleChange('interests', e.target.value.split(',').map((i: string) => i.trim()))}
             />
           </div>
 
@@ -185,7 +65,7 @@ const ProfileForm: React.FC<ProfileFormProps> = ({ profile, onSubmit }) => {
             <Label htmlFor="purpose">Purpose</Label>
             <Select 
               value={formData.purpose || undefined} 
-              onValueChange={(value) => handleChange('purpose', value)}
+              onValueChange={(value: string) => handleChange('purpose', value)}
             >
               <SelectTrigger id="purpose" name="purpose">
                 <SelectValue placeholder="Select purpose" />
@@ -207,7 +87,7 @@ const ProfileForm: React.FC<ProfileFormProps> = ({ profile, onSubmit }) => {
               min="18"
               max="100"
               value={formData.age}
-              onChange={(e) => handleChange('age', parseInt(e.target.value))}
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleChange('age', parseInt(e.target.value))}
             />
           </div>
 
@@ -215,7 +95,7 @@ const ProfileForm: React.FC<ProfileFormProps> = ({ profile, onSubmit }) => {
             <Label htmlFor="gender">Gender</Label>
             <Select 
               value={formData.gender || undefined} 
-              onValueChange={(value) => handleChange('gender', value)}
+              onValueChange={(value: string) => handleChange('gender', value)}
             >
               <SelectTrigger id="gender" name="gender">
                 <SelectValue placeholder="Select gender" />
@@ -234,7 +114,7 @@ const ProfileForm: React.FC<ProfileFormProps> = ({ profile, onSubmit }) => {
             <ToggleGroup 
               type="single" 
               value={formData.searchGlobally ? "global" : "country"} 
-              onValueChange={(value) => handleChange('searchGlobally', value === "global")}
+              onValueChange={(value: string) => handleChange('searchGlobally', value === "global")}
               aria-labelledby="search-scope-label"
             >
               <ToggleGroupItem value="global" className="w-full">Global</ToggleGroupItem>
@@ -245,7 +125,7 @@ const ProfileForm: React.FC<ProfileFormProps> = ({ profile, onSubmit }) => {
           {!formData.searchGlobally && (
             <div className="space-y-2">
               <Label htmlFor="country">Country</Label>
-              <Select value={formData.country || undefined} onValueChange={(value) => handleChange('country', value)}>
+              <Select value={formData.country || undefined} onValueChange={(value: string) => handleChange('country', value)}>
                 <SelectTrigger id="country" name="country">
                   <SelectValue placeholder="Select country" />
                 </SelectTrigger>
@@ -262,7 +142,7 @@ const ProfileForm: React.FC<ProfileFormProps> = ({ profile, onSubmit }) => {
             <Label htmlFor="personalityType">Personality Type</Label>
             <Select 
               value={formData.personalityType || undefined} 
-              onValueChange={(value) => handleChange('personalityType', value)}
+              onValueChange={(value: string) => handleChange('personalityType', value)}
             >
               <SelectTrigger id="personalityType" name="personalityType">
                 <SelectValue placeholder="Select personality type" />
@@ -282,8 +162,8 @@ const ProfileForm: React.FC<ProfileFormProps> = ({ profile, onSubmit }) => {
               min={DEFAULT_MIN_AGE}
               max={100}
               values={[formData.preferences.ageRange.min, formData.preferences.ageRange.max]}
-              onChange={(values) => handlePreferenceChange('ageRange', values)}
-              renderTrack={({ props, children }) => (
+              onChange={(values: number[]) => handlePreferenceChange('ageRange', values)}
+              renderTrack={({ props, children }: { props: any; children: ReactNode }) => (
                 <div
                   {...props}
                   style={{
@@ -296,7 +176,7 @@ const ProfileForm: React.FC<ProfileFormProps> = ({ profile, onSubmit }) => {
                   {children}
                 </div>
               )}
-              renderThumb={({ props }) => (
+              renderThumb={({ props }: { props: any }) => (
                 <div
                   {...props}
                   style={{
@@ -321,7 +201,7 @@ const ProfileForm: React.FC<ProfileFormProps> = ({ profile, onSubmit }) => {
             <ToggleGroup 
               type="single" 
               value={formData.preferences.genderPreference[0] || ''} 
-              onValueChange={(value) => handlePreferenceChange('genderPreference', value ? [value] : [])}
+              onValueChange={(value: string) => handlePreferenceChange('genderPreference', value ? [value] : [])}
             >
               <ToggleGroupItem value="male" className="w-full">Male</ToggleGroupItem>
               <ToggleGroupItem value="female" className="w-full">Female</ToggleGroupItem>

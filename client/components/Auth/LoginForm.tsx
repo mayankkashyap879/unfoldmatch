@@ -1,19 +1,13 @@
-// client/components/Auth/LoginForm.tsx
-import React, { useState } from 'react';
+// components/Auth/LoginForm.tsx
 
-interface LoginFormProps {
-  onSubmit: (identifier: string, password: string) => void;
-  error: string;
-}
+import React from 'react';
+import { LoginFormProps } from '../../types/auth';
+import { useLoginForm } from '../../hooks/useLoginForm';
 
-export const LoginForm: React.FC<LoginFormProps> = ({ onSubmit, error }) => {
-  const [identifier, setIdentifier] = useState('');
-  const [password, setPassword] = useState('');
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    onSubmit(identifier, password);
-  };
+export const LoginForm: React.FC<LoginFormProps> = ({ onSubmit, error } : LoginFormProps) => {
+  const { formData, handleChange, handleSubmit } = useLoginForm((data) => {
+    onSubmit(data.identifier, data.password);
+  });
 
   return (
     <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
@@ -30,8 +24,8 @@ export const LoginForm: React.FC<LoginFormProps> = ({ onSubmit, error }) => {
             required
             className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-t-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
             placeholder="Username or Email"
-            value={identifier}
-            onChange={(e) => setIdentifier(e.target.value)}
+            value={formData.identifier}
+            onChange={handleChange}
           />
         </div>
         <div>
@@ -46,8 +40,8 @@ export const LoginForm: React.FC<LoginFormProps> = ({ onSubmit, error }) => {
             required
             className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-b-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
             placeholder="Password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
+            value={formData.password}
+            onChange={handleChange}
           />
         </div>
       </div>

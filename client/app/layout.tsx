@@ -1,36 +1,15 @@
-// client/app/layout.tsx
+// app/layout.tsx
 'use client';
 
-import { useState, useEffect } from 'react';
-import { AuthProvider } from '../components/AuthProvider'
-import './globals.css'
-import Navbar from '../components/Navbar';
+import { AuthProvider } from '@/contexts/AuthContext';
+import '@/styles/globals.css';
+import Navbar from '@/components/shared/Navbar';
 import { Toaster } from "@/components/ui/toaster"
+import { useTheme } from '@/hooks/useTheme';
+import { RootLayoutProps } from '@/types/layout';
 
-export default function RootLayout({
-  children,
-}: {
-  children: React.ReactNode
-}) {
-  const [isDarkMode, setIsDarkMode] = useState(true);
-
-  useEffect(() => {
-    // Check for user preference in localStorage
-    const savedTheme = localStorage.getItem('theme');
-    if (savedTheme) {
-      setIsDarkMode(savedTheme === 'dark');
-    } else {
-      // If no preference, check system preference
-      const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-      setIsDarkMode(prefersDark);
-    }
-  }, []);
-
-  const toggleTheme = () => {
-    const newTheme = !isDarkMode;
-    setIsDarkMode(newTheme);
-    localStorage.setItem('theme', newTheme ? 'dark' : 'light');
-  };
+export default function RootLayout({ children }: RootLayoutProps) {
+  const { isDarkMode, toggleTheme } = useTheme();
 
   return (
     <html lang="en" className={isDarkMode ? 'dark' : ''}>

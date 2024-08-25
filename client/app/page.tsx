@@ -1,8 +1,8 @@
 // client/app/page.tsx
 'use client';
 
-import Link from 'next/link'
-import { useAuth } from '../components/AuthProvider'
+import Link from 'next/link';
+import { useAuth } from '@/hooks/useAuth';
 
 export default function Home() {
   const { user } = useAuth();
