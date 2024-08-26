@@ -29,7 +29,11 @@ export const getUserMatches = async (userId: string) => {
 
   const potentialMatches = await User.find({
     _id: { $ne: currentUser._id },
-    // Add your matching criteria here
+    age: { $gte: currentUser.preferences.ageRange.min, $lte: currentUser.preferences.ageRange.max },
+    gender: { $in: currentUser.preferences.genderPreference },
+    'preferences.genderPreference': currentUser.gender,
+    'preferences.ageRange.min': { $lte: currentUser.age },
+    'preferences.ageRange.max': { $gte: currentUser.age }
   }).sort({ createdAt: -1 });
 
   const newMatches = [];

@@ -1,4 +1,4 @@
-// utils/authUtils.ts
+// client/utils/authUtils.ts
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';

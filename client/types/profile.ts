@@ -1,4 +1,4 @@
-// types/profile.ts
+// client/types/profile.ts
 
 export interface Profile {
     bio: string;

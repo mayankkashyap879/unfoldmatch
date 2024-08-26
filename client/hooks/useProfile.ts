@@ -1,4 +1,4 @@
-// hooks/useProfile.ts
+// client/hooks/useProfile.ts
 
 import { useState, useEffect } from 'react';
 import { Profile } from '@/types/profile';

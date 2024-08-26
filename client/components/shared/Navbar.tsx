@@ -1,4 +1,4 @@
-// client/Navbar.tsx
+// client/components/shared/Navbar.tsx
 import React from 'react';
 import Link from 'next/link';
 import { Button } from "@/components/ui/button";

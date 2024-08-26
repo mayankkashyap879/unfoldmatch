@@ -1,4 +1,3 @@
-// components/ChatWindow.tsx
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -6,7 +5,6 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Loader2 } from "lucide-react";
 import { ChatWindowProps, Message } from '@/types/chat';
 import { useScrollToBottom } from '@/hooks/useScrollToBottom';
-import { getFriendshipActionContent } from '@/utils/chatUtils';
 
 const ChatWindow: React.FC<ChatWindowProps> = ({
   selectedMatch,
@@ -34,7 +32,25 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
     );
   }
 
-  const friendshipAction = getFriendshipActionContent(friendshipStatus, canRequestFriendship);
+  const renderFriendshipAction = () => {
+    switch (friendshipStatus) {
+      case 'none':
+        return canRequestFriendship && (
+          <Button onClick={onRequestFriendship} className="w-full">Request Friendship</Button>
+        );
+      case 'pending_sent':
+        return <p className="text-center text-sm text-muted-foreground">Friendship request sent</p>;
+      case 'pending_received':
+        return (
+          <div className="flex space-x-2">
+            <Button onClick={() => onRespondToFriendship(true)} className="flex-1">Accept</Button>
+            <Button onClick={() => onRespondToFriendship(false)} variant="outline" className="flex-1">Decline</Button>
+          </div>
+        );
+      case 'friends':
+        return <p className="text-center text-sm text-muted-foreground">You are friends</p>;
+    }
+  };
 
   return (
     <Card className="flex flex-col h-full">
@@ -56,63 +72,19 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
           <div ref={messagesEndRef} />
         </ScrollArea>
       </CardContent>
-      {friendshipAction && (
-        <FriendshipActionSection
-          action={friendshipAction}
-          onRequestFriendship={onRequestFriendship}
-          onRespondToFriendship={onRespondToFriendship}
-        />
-      )}
+      <div className="p-2 flex-shrink-0">
+        {renderFriendshipAction()}
+      </div>
     </Card>
   );
 };
 
-const MessageBubble: React.FC<{ message: Message; isCurrentUser: boolean }> = ({ message, isCurrentUser }: { message: Message; isCurrentUser: boolean }) => (
+const MessageBubble: React.FC<{ message: Message; isCurrentUser: boolean }> = ({ message, isCurrentUser }) => (
   <div className={`mb-2 ${isCurrentUser ? 'text-right' : 'text-left'}`}>
-    <span className="inline-block rounded px-2 py-1 bg-muted text-muted-foreground text-sm">
+    <span className={`inline-block rounded px-2 py-1 ${isCurrentUser ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground'} text-sm`}>
       {message.content}
     </span>
   </div>
 );
-
-const FriendshipActionSection: React.FC<{
-  action: { type: string };
-  onRequestFriendship: () => void;
-  onRespondToFriendship: (accept: boolean) => void;
-}> = ({ action, onRequestFriendship, onRespondToFriendship }: {
-  action: { type: string };
-  onRequestFriendship: () => void;
-  onRespondToFriendship: (accept: boolean) => void;
-}) => {
-  switch (action.type) {
-    case 'request':
-      return (
-        <div className="p-2 flex-shrink-0">
-          <Button onClick={onRequestFriendship} className="w-full">Request Friendship</Button>
-        </div>
-      );
-    case 'respond':
-      return (
-        <div className="p-2 flex-shrink-0 flex space-x-2">
-          <Button onClick={() => onRespondToFriendship(true)} className="flex-1">Accept</Button>
-          <Button onClick={() => onRespondToFriendship(false)} className="flex-1" variant="outline">Decline</Button>
-        </div>
-      );
-    case 'waiting':
-      return (
-        <div className="p-2 flex-shrink-0">
-          <p className="text-center text-sm text-muted-foreground">Friendship request sent</p>
-        </div>
-      );
-    case 'friends':
-      return (
-        <div className="p-2 flex-shrink-0">
-          <p className="text-center text-sm text-muted-foreground">You are friends</p>
-        </div>
-      );
-    default:
-      return null;
-  }
-};
 
 export default ChatWindow;

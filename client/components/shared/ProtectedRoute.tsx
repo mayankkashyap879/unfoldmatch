@@ -1,3 +1,4 @@
+// client/components/shared/ProtectedRoute.tsx
 'use client';
 
 import { ReactNode } from 'react';

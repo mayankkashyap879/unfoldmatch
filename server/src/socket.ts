@@ -1,9 +1,7 @@
-// server/socket.ts
-
 import { Server } from 'socket.io';
 import { Server as HttpServer } from 'http';
 import { CLIENT_URL } from './config';
-import { handleSendMessage, handleRequestFriendship, handleFriendshipResponse } from './services/chatService';
+import { handleSendMessage, createFriendshipRequest, handleFriendshipResponse } from './services/chatService';
 
 export const setupSocketIO = (server: HttpServer) => {
   const io = new Server(server, {
@@ -24,9 +22,9 @@ export const setupSocketIO = (server: HttpServer) => {
 
     socket.on('send message', (messageData) => handleSendMessage(io, messageData));
 
-    socket.on('request friendship', (data) => handleRequestFriendship(io, data));
+    socket.on('request friendship', (data) => createFriendshipRequest(io, data.matchId, data.userId));
 
-    socket.on('friendship response', (data) => handleFriendshipResponse(io, data));
+    socket.on('friendship response', (data) => handleFriendshipResponse(io, data.matchId, data.userId, data.accept));
 
     socket.on('disconnect', () => {
       console.log('Client disconnected');

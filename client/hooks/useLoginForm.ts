@@ -1,4 +1,4 @@
-// hooks/useLoginForm.ts
+// client/hooks/useLoginForm.ts
 
 import { useState } from 'react';
 import { LoginFormData } from '../types/auth';

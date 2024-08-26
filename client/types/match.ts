@@ -1,4 +1,4 @@
-// types/match.ts
+// client/types/match.ts
 export interface Match {
     _id: string;
     username: string;

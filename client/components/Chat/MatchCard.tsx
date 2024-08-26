@@ -1,4 +1,4 @@
-// components/MatchCard.tsx
+// client/components/chat/MatchCard.tsx
 import React from 'react';
 import { Card, CardContent } from "@/components/ui/card";
 import { MatchCardProps } from '@/types/match';

@@ -1,4 +1,4 @@
-// hooks/useRegisterForm.ts
+// client/hooks/useRegisterForm.ts
 
 import { useState } from 'react';
 import { RegisterFormData } from '../types/auth';

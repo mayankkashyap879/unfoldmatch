@@ -1,3 +1,4 @@
+// client/utils/constants.ts
 export const DEFAULT_MIN_AGE = 18;
 export const DEFAULT_MAX_AGE = 50;
 

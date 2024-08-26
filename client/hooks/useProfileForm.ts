@@ -1,3 +1,4 @@
+// client/hooks/useProfileForm.ts
 import { useState, useCallback, useEffect } from 'react';
 import { Profile } from '@/types/profile';
 import { DEFAULT_MIN_AGE, DEFAULT_MAX_AGE } from '@/utils/constants';

@@ -1,4 +1,4 @@
-// hooks/useMessageInput.ts
+// client/hooks/useMessageInput.ts
 import { useState } from 'react';
 
 export const useMessageInput = (onSendMessage: (message: string) => void) => {

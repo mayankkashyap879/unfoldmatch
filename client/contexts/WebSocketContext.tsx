@@ -1,3 +1,4 @@
+// client/contexts/WebSocketContext.tsx
 'use client';
 
 import React, { createContext, useState, useEffect, ReactNode } from 'react';

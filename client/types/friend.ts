@@ -1,4 +1,4 @@
-// types/friend.ts
+// client/types/friend.ts
 
 export interface Friend {
     _id: string;

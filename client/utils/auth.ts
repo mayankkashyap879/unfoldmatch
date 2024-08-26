@@ -1,3 +1,4 @@
+// client/utils/auth.ts
 import { User } from '@/types/auth';
 
 export const setAuthData = (token: string, userData: User) => {

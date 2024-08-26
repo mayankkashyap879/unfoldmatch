@@ -1,4 +1,4 @@
-// utils/chatUtils.ts
+// client/utils/chatUtils.ts
 import { FriendshipStatus } from '@/types/chat';
 import { Match } from '@/types/match';
 

@@ -1,15 +1,18 @@
-// types/chat.ts
+// client/types/chat.ts
 import { Match } from './match';
 
 export interface MessageInputProps {
-    onSendMessage: (message: string) => void;
-  }
+  onSendMessage: (message: string) => void;
+}
 
-  // types/chat.ts
 export interface Message {
+  _id?: string; // Optional, as it might be assigned by the server
+  matchId: string;
   sender: string;
   content: string;
   timestamp: Date;
+  messageCount?: number; // Optional, as it might not be needed for every message
+  canRequestFriendship?: boolean; // Optional, as it might not be needed for every message
 }
 
 export interface SelectedMatch {
@@ -31,14 +34,6 @@ export interface ChatWindowProps {
   onRespondToFriendship: (accept: boolean) => void;
   currentUserId: string;
   isLoadingMessages: boolean;
-}
-
-export interface Message {
-  sender: string;
-  content: string;
-  timestamp: Date;
-  messageCount: number;
-  canRequestFriendship: boolean;
 }
 
 export interface ChatInterfaceProps {

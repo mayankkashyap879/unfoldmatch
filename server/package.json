@@ -25,6 +25,7 @@
     "@types/mongoose": "^5.11.96",
     "@types/node": "^22.5.0",
     "@types/punycode": "^2.1.4",
+    "@types/socket.io": "^3.0.1",
     "@typescript-eslint/eslint-plugin": "^8.2.0",
     "@typescript-eslint/parser": "^8.2.0",
     "nodemon": "^2.0.15",

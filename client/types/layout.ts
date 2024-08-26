@@ -1,4 +1,4 @@
-// types/layout.ts
+// client/types/layout.ts
 
 import { ReactNode } from 'react';
 

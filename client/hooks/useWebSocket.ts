@@ -1,3 +1,4 @@
+// client/hooks/useWebSocket.ts
 import { useContext } from 'react';
 import { WebSocketContext } from '@/contexts/WebSocketContext';
 import { WebSocketContextType } from '@/types/websocket';

@@ -1,4 +1,4 @@
-// hooks/useScrollToBottom.ts
+// client/hooks/useScrollToBottom.ts
 import { useEffect, useRef } from 'react';
 
 export const useScrollToBottom = <T extends HTMLElement>() => {

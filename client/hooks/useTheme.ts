@@ -1,4 +1,4 @@
-// hooks/useTheme.ts
+// client/hooks/useTheme.ts
 
 import { useState, useEffect } from 'react';
 

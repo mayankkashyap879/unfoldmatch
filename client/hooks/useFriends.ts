@@ -1,4 +1,4 @@
-// hooks/useFriends.ts
+// client/hooks/useFriends.ts
 
 import { useState, useEffect } from 'react';
 import { Friend, PendingFriendship } from '@/types/friend';

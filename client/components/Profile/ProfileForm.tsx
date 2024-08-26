@@ -1,3 +1,4 @@
+// client/components/profile/ProfileForm.tsx
 import React, { ReactNode } from 'react';
 import { Range } from 'react-range';
 import { Input } from "@/components/ui/input";

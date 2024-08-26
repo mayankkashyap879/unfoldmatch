@@ -1,4 +1,4 @@
-// utils/matchUtils.ts
+// client/utils/matchUtils.ts
 import { Match } from '@/types/match';
 
 export const filterNonFriendMatches = (matches: Match[]): Match[] => {
