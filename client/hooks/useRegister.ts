@@ -1,4 +1,4 @@
-// client/hooks/useRegister.ts
+// hooks/useRegister.ts
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
@@ -9,13 +9,13 @@ export const useRegister = () => {
   const router = useRouter();
   const { login } = useAuth();
 
-  const register = async (username: string, email: string, password: string) => {
+  const register = async (username: string, email: string, password: string, gender: string, age: number, purpose: string) => {
     setError('');
     try {
       const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/auth/register`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username, email, password }),
+        body: JSON.stringify({ username, email, password, gender, age, purpose }),
       });
       
       if (response.ok) {

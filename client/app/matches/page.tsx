@@ -6,19 +6,20 @@ import { useAuth } from '@/hooks/useAuth';
 import ProtectedRoute from '@/components/shared/ProtectedRoute';
 import ChatInterface from '@/components/chat/ChatInterface';
 import { Loader2 } from "lucide-react";
+import { Match } from '@/types/match';
 
-interface Match {
-  _id: string;
-  username: string;
-  compatibilityScore: number;
-  expiresAt: string;
-  status: 'active' | 'pending_friendship' | 'friends';
-  age?: number;
-  bio?: string;
-  interests?: string[];
-  purpose?: string;
-  personalityType?: string;
-}
+// interface Match {
+//   _id: string;
+//   username: string;
+//   compatibilityScore: number;
+//   expiresAt: string;
+//   status: 'active' | 'pending_friendship' | 'friends';
+//   age?: number;
+//   bio?: string;
+//   interests?: string[];
+//   purpose?: string;
+//   personalityType?: string;
+// }
 
 export default function MatchesPage() {
   const [matches, setMatches] = useState<Match[]>([]);
@@ -42,9 +43,13 @@ export default function MatchesPage() {
         if (response.ok) {
           const data = await response.json();
           console.log('Matches data:', data);
-          setMatches(data.matches || []);
-          if (data.matches && data.matches.length > 0 && !selectedMatch) {
-            setSelectedMatch(data.matches[0]);
+          const formattedMatches: Match[] = data.matches.map((match: any) => ({
+            ...match,
+            gender: match.gender || 'other' // Provide a default value if gender is not present
+          }));
+          setMatches(formattedMatches);
+          if (formattedMatches.length > 0 && !selectedMatch) {
+            setSelectedMatch(formattedMatches[0]);
           }
         } else {
           const errorData = await response.json();

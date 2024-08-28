@@ -8,12 +8,51 @@ import {
   checkFriendshipStatus,
   getMatchStatusById
 } from '../services/matchService';
+import { getMessagesByMatchId } from '../services/messageService';
+import { Match } from '../models/Match'; // Add this import
+import { CHAT_MILESTONE } from '../config/constants'; // Add this import
 
 interface AuthRequest extends Request {
   user?: {
     userId: string;
   };
 }
+
+export const getMessages = async (req: Request, res: Response) => {
+  try {
+    const messages = await getMessagesByMatchId(req.params.matchId);
+    res.json(messages);
+  } catch (error) {
+    res.status(500).json({ message: 'Error fetching messages' });
+  }
+};
+
+export const getMatchData = async (req: Request, res: Response) => {
+  try {
+    const matchId = req.params.matchId;
+    const match = await Match.findById(matchId);
+    if (!match) {
+      return res.status(404).json({ message: 'Match not found' });
+    }
+
+    const messages = await getMessagesByMatchId(matchId);
+    const messageCount = messages.length; // Use the actual message count
+    const canRequestFriendship = messageCount >= CHAT_MILESTONE && match.status === 'active';
+
+    res.json({
+      match: {
+        ...match.toObject(),
+        messageCount,
+        status: match.status
+      },
+      messages,
+      canRequestFriendship
+    });
+  } catch (error) {
+    console.error('Error fetching match data:', error);
+    res.status(500).json({ message: 'Error fetching match data' });
+  }
+};
 
 export const getMatches = async (req: AuthRequest, res: Response) => {
   try {

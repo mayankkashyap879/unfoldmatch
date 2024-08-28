@@ -17,14 +17,14 @@ interface AuthRequest extends Request {
 
 export const registerUser = async (req: Request, res: Response) => {
   try {
-    const { username, email, password } = req.body;
+    const { username, email, password, gender, age, purpose } = req.body;
     
-    const validationErrors = validateRegistrationInput({ username, email, password });
+    const validationErrors = validateRegistrationInput({ username, email, password, gender, age, purpose });
     if (validationErrors.length > 0) {
       return res.status(400).json({ errors: validationErrors });
     }
 
-    const result = await registerUserService(username, email, password);
+    const result = await registerUserService(username, email, password, gender, age, purpose);
     res.status(201).json(result);
   } catch (error) {
     console.error('Registration error:', error);

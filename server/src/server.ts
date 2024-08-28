@@ -6,6 +6,8 @@ import http from 'http';
 import { setupSocketIO } from './socket';
 import { connectDB } from './db';
 import { PORT, CLIENT_URL } from './config';
+import dotenv from 'dotenv';
+dotenv.config();
 
 // Import routes
 import authRoutes from './routes/auth';

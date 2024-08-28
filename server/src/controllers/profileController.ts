@@ -1,15 +1,9 @@
-// server/controllers/profileController.ts
+// server/src/controllers/profileController.ts
 
-import { Request as ExpressRequest, Response } from 'express';
+import { Response } from 'express';
+import { AuthenticatedRequest } from '../types/customTypes';
 import { getUserProfile, updateUserProfile } from '../services/profileService';
 import { ProfileUpdateData } from '../types/profile';
-
-interface AuthenticatedRequest extends ExpressRequest {
-  user?: {
-    userId: string;
-    // Add any other properties that your user object might have
-  };
-}
 
 export const getProfile = async (req: AuthenticatedRequest, res: Response) => {
   try {

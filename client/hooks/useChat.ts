@@ -1,11 +1,17 @@
-import { useState, useEffect, useCallback } from 'react';
+// client/hooks/useChat.ts
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from "@/components/ui/use-toast";
 import { useRouter } from 'next/navigation';
 import io, { Socket } from 'socket.io-client';
 import { Message, FriendshipStatus } from '@/types/chat';
 import { Match } from '@/types/match';
-import { CHAT_MILESTONE } from '@/utils/constants';
+
+type MessageAcknowledgement = {
+  success: boolean;
+  message?: Message;
+  error?: string;
+};
 
 export const useChat = (initialMatches: Match[]) => {
   const [matches, setMatches] = useState<Match[]>(initialMatches);
@@ -13,15 +19,17 @@ export const useChat = (initialMatches: Match[]) => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [socket, setSocket] = useState<Socket | null>(null);
   const [timeLeft, setTimeLeft] = useState('');
-  const [messageCount, setMessageCount] = useState(0);
+  const [messageCount, setMessageCount] = useState<number>(0);
   const [canRequestFriendship, setCanRequestFriendship] = useState(false);
   const [showPotentialMatches, setShowPotentialMatches] = useState(true);
   const [isLoadingMessages, setIsLoadingMessages] = useState(false);
   const [friendshipStatus, setFriendshipStatus] = useState<FriendshipStatus>('none');
+  const [reactions, setReactions] = useState<{ [messageId: string]: { [userId: string]: string } }>({});
 
   const { user } = useAuth();
   const { toast } = useToast();
   const router = useRouter();
+  const socketRef = useRef<Socket | null>(null);
 
   const updateMatchStatus = useCallback((matchId: string, newStatus: Match['status']) => {
     setMatches(prevMatches => 
@@ -34,38 +42,73 @@ export const useChat = (initialMatches: Match[]) => {
     }
   }, [selectedMatch]);
 
-  useEffect(() => {
+  const connectSocket = useCallback(() => {
     if (!user) return;
 
-    const newSocket = io(`${process.env.NEXT_PUBLIC_API_URL}`);
-    setSocket(newSocket);
+    const newSocket = io(`${process.env.NEXT_PUBLIC_API_URL}`, {
+      query: { userId: user.id },
+      transports: ['websocket'],
+      reconnectionAttempts: 5,
+      reconnectionDelay: 1000,
+    });
 
     newSocket.on('connect', () => {
       console.log('Connected to WebSocket');
+      console.log('Socket ID:', newSocket.id);
+      console.log('Transport:', newSocket.io.engine.transport.name);
+      newSocket.emit('join user room', user.id);
+      if (selectedMatch) {
+        newSocket.emit('join chat', selectedMatch._id);
+      }
     });
 
-    newSocket.on('disconnect', () => {
-      console.log('Disconnected from WebSocket');
+    newSocket.on('connect_error', (error) => {
+      console.error('WebSocket connection error:', error);
+      toast({
+        title: "Connection Error",
+        description: "Failed to connect to the chat server. Please check your internet connection.",
+        variant: "destructive",
+      });
     });
+
+    newSocket.on('disconnect', (reason) => {
+      console.log('Disconnected from WebSocket:', reason);
+      if (reason === 'io server disconnect') {
+        newSocket.connect();
+      }
+    });
+
+    setSocket(newSocket);
+    socketRef.current = newSocket;
 
     return () => {
       newSocket.disconnect();
     };
-  }, [user]);
+  }, [user, selectedMatch, toast]);
 
   useEffect(() => {
-    if (!socket || !selectedMatch) return;
+    const cleanup = connectSocket();
+    return cleanup;
+  }, [connectSocket]);
 
-    socket.emit('join chat', selectedMatch._id);
+  useEffect(() => {
+    if (!socketRef.current) return;
 
     const handleNewMessage = (message: Message) => {
-      setMessages(prevMessages => [...prevMessages, message]);
-      setMessageCount(prevCount => message.messageCount ?? prevCount);
-      setCanRequestFriendship(prevCanRequest => message.canRequestFriendship ?? prevCanRequest);
+      console.log('New message received:', message);
+      if (selectedMatch && (message.senderId === selectedMatch._id || message.receiverId === selectedMatch._id)) {
+        setMessages(prevMessages => {
+          if (!prevMessages.some(msg => msg._id === message._id)) {
+            return [...prevMessages, message];
+          }
+          return prevMessages;
+        });
+        setMessageCount(prevCount => prevCount + 1);
+      }
     };
 
     const handleMatchUpdate = (data: { matchId: string; messageCount: number; canRequestFriendship: boolean; status: Match['status'] }) => {
-      if (data.matchId === selectedMatch._id) {
+      if (selectedMatch && data.matchId === selectedMatch._id) {
         setMessageCount(data.messageCount);
         setCanRequestFriendship(data.canRequestFriendship);
         updateMatchStatus(data.matchId, data.status);
@@ -73,7 +116,7 @@ export const useChat = (initialMatches: Match[]) => {
     };
 
     const handleFriendshipRequested = (data: { matchId: string; receiverId: string; requesterId: string }) => {
-      if (data.matchId === selectedMatch._id) {
+      if (selectedMatch && data.matchId === selectedMatch._id) {
         if (data.receiverId === user?.id) {
           setFriendshipStatus('pending_received');
           toast({
@@ -87,11 +130,12 @@ export const useChat = (initialMatches: Match[]) => {
             description: `Your friendship request to ${selectedMatch.username} has been sent.`,
           });
         }
+        updateMatchStatus(data.matchId, 'pending_friendship');
       }
     };
 
     const handleFriendshipStatusUpdated = (data: { matchId: string; status: Match['status'] }) => {
-      if (data.matchId === selectedMatch._id) {
+      if (selectedMatch && data.matchId === selectedMatch._id) {
         updateMatchStatus(data.matchId, data.status);
         if (data.status === 'friends') {
           setFriendshipStatus('friends');
@@ -99,11 +143,10 @@ export const useChat = (initialMatches: Match[]) => {
             title: "Friendship Accepted",
             description: `You are now friends with ${selectedMatch.username}!`,
           });
-          router.push('/dashboard/friends');
+          setCanRequestFriendship(false);
         } else if (data.status === 'active') {
           setFriendshipStatus('none');
-          setMessageCount(0);
-          setCanRequestFriendship(false);
+          setCanRequestFriendship(true);
           toast({
             title: "Friendship Declined",
             description: `The friendship request with ${selectedMatch.username} was declined.`,
@@ -112,34 +155,62 @@ export const useChat = (initialMatches: Match[]) => {
       }
     };
 
-    socket.on('new message', handleNewMessage);
-    socket.on('match update', handleMatchUpdate);
-    socket.on('friendship requested', handleFriendshipRequested);
-    socket.on('friendship status updated', handleFriendshipStatusUpdated);
+    const handleMessageReaction = (data: { messageId: string, reactions: { [userId: string]: string } }) => {
+      console.log('Received reaction update:', data);
+      setMessages(prevMessages =>
+        prevMessages.map(msg =>
+          msg._id === data.messageId
+            ? { ...msg, reactions: data.reactions }
+            : msg
+        )
+      );
+      setReactions(prevReactions => ({
+        ...prevReactions,
+        [data.messageId]: data.reactions
+      }));
+    };
+
+    socketRef.current.on('new message', handleNewMessage);
+    socketRef.current.on('match update', handleMatchUpdate);
+    socketRef.current.on('friendship requested', handleFriendshipRequested);
+    socketRef.current.on('friendship status updated', handleFriendshipStatusUpdated);
+    socketRef.current.on('message reaction', handleMessageReaction);
 
     return () => {
-      socket.off('new message', handleNewMessage);
-      socket.off('match update', handleMatchUpdate);
-      socket.off('friendship requested', handleFriendshipRequested);
-      socket.off('friendship status updated', handleFriendshipStatusUpdated);
+      if (socketRef.current) {
+        socketRef.current.off('new message', handleNewMessage);
+        socketRef.current.off('match update', handleMatchUpdate);
+        socketRef.current.off('friendship requested', handleFriendshipRequested);
+        socketRef.current.off('friendship status updated', handleFriendshipStatusUpdated);
+        socketRef.current.off('message reaction', handleMessageReaction);
+      }
     };
-  }, [socket, selectedMatch, user, updateMatchStatus, toast, router]);
+  }, [socketRef, selectedMatch, user, updateMatchStatus, toast]);
 
-  const fetchMessages = useCallback(async (matchId: string) => {
+  const fetchMessages = useCallback(async (id: string, isFriend: boolean = false) => {
+    if (!user) return;
     setIsLoadingMessages(true);
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/messages/${matchId}`, {
+      const url = isFriend
+        ? `${process.env.NEXT_PUBLIC_API_URL}/api/messages/friend/${id}/${user.id}`
+        : `${process.env.NEXT_PUBLIC_API_URL}/api/messages/match/${id}`;
+      console.log('Fetching messages from:', url);
+      const response = await fetch(url, {
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('token')}`
         }
       });
       if (!response.ok) {
-        throw new Error('Failed to fetch messages');
+        throw new Error(`HTTP error! status: ${response.status}`);
       }
       const data = await response.json();
-      setMessages(data.messages);
-      setMessageCount(data.messages.length);
-      setCanRequestFriendship(data.messages.length >= CHAT_MILESTONE);
+      setMessages(data);
+      const newReactions = data.reduce((acc: { [messageId: string]: { [userId: string]: string } }, message: Message) => {
+        acc[message._id] = message.reactions;
+        return acc;
+      }, {});
+      setReactions(newReactions);
+      setMessageCount(data.length);
     } catch (error) {
       console.error('Error fetching messages:', error);
       toast({
@@ -150,7 +221,7 @@ export const useChat = (initialMatches: Match[]) => {
     } finally {
       setIsLoadingMessages(false);
     }
-  }, [toast]);
+  }, [user, toast]);
 
   const handleSelectMatch = useCallback(async (match: Match) => {
     setSelectedMatch(match);
@@ -158,14 +229,17 @@ export const useChat = (initialMatches: Match[]) => {
     setMessageCount(0);
     setCanRequestFriendship(false);
     setTimeLeft('');
-    setFriendshipStatus('none');
+    setFriendshipStatus(match.status === 'friends' ? 'friends' : 'none');
     setIsLoadingMessages(true);
-    
+
     try {
       if (match.status === 'friends') {
-        router.push('/dashboard/friends');
+        await fetchMessages(match._id, true);
       } else {
-        await fetchMessages(match._id);
+        if (socketRef.current) {
+          socketRef.current.emit('join chat', match._id);
+        }
+        await fetchMessages(match._id, false);
       }
     } catch (error) {
       console.error('Error selecting match:', error);
@@ -177,31 +251,126 @@ export const useChat = (initialMatches: Match[]) => {
     } finally {
       setIsLoadingMessages(false);
     }
-  }, [fetchMessages, router, toast]);
+  }, [fetchMessages, toast]);
 
   const sendMessage = useCallback((content: string) => {
-    if (content.trim() && socket && user && selectedMatch && selectedMatch.status !== 'friends') {
-      const messageData = {
-        matchId: selectedMatch._id,
-        sender: user.id,
+    if (content.trim() && socketRef.current && user && selectedMatch) {
+      const tempId = `temp-${Date.now()}`;
+      const messageData: Message = {
+        _id: tempId,
+        matchId: selectedMatch.status === 'friends' ? undefined : selectedMatch._id,
+        senderId: user.id,
+        receiverId: selectedMatch._id,
         content,
-        timestamp: new Date()
+        timestamp: new Date(),
+        reactions: {}
       };
-      socket.emit('send message', messageData);
+
+      setMessages(prevMessages => [...prevMessages, messageData]);
+      setMessageCount(prevCount => prevCount + 1);
+
+      socketRef.current.emit('send message', messageData, (acknowledgement: MessageAcknowledgement) => {
+        if (acknowledgement.success && acknowledgement.message) {
+          setMessages(prevMessages => 
+            prevMessages.map(msg => msg._id === tempId ? acknowledgement.message! : msg)
+          );
+        } else {
+          setMessages(prevMessages => prevMessages.filter(msg => msg._id !== tempId));
+          setMessageCount(prevCount => prevCount - 1);
+          toast({
+            title: "Error",
+            description: acknowledgement.error || "Failed to send message. Please try again.",
+            variant: "destructive",
+          });
+        }
+      });
     }
-  }, [socket, user, selectedMatch]);
+  }, [socketRef, user, selectedMatch, toast]);
 
   const requestFriendship = useCallback(() => {
-    if (socket && user && selectedMatch && canRequestFriendship) {
-      socket.emit('request friendship', { matchId: selectedMatch._id, userId: user.id });
+    if (socketRef.current && user && selectedMatch && canRequestFriendship) {
+      socketRef.current.emit('request friendship', { matchId: selectedMatch._id, userId: user.id }, (response: { success: boolean, error?: string }) => {
+        if (response.success) {
+          setFriendshipStatus('pending_sent');
+          updateMatchStatus(selectedMatch._id, 'pending_friendship');
+          toast({
+            title: "Friendship Requested",
+            description: `You've sent a friendship request to ${selectedMatch.username}.`,
+          });
+        } else {
+          toast({
+            title: "Error",
+            description: response.error || "Failed to send friendship request. Please try again.",
+            variant: "destructive",
+          });
+        }
+      });
     }
-  }, [socket, user, selectedMatch, canRequestFriendship]);
+  }, [socketRef, user, selectedMatch, canRequestFriendship, toast, updateMatchStatus]);
 
-  const respondToFriendship = useCallback((accept: boolean) => {
-    if (socket && user && selectedMatch) {
-      socket.emit('friendship response', { matchId: selectedMatch._id, userId: user.id, accept });
+  const sendReaction = useCallback((messageId: string, emoji: string) => {
+    if (socketRef.current && user) {
+      console.log('Sending reaction:', { messageId, userId: user.id, emoji });
+      socketRef.current.emit('send reaction', { messageId, userId: user.id, emoji });
     }
-  }, [socket, user, selectedMatch]);
+  }, [socketRef, user]);
+
+  const sendGif = useCallback((gifUrl: string) => {
+    if (socketRef.current && user && selectedMatch) {
+      const tempId = `temp-${Date.now()}`;
+      const messageData: Message = {
+        _id: tempId,
+        matchId: selectedMatch.status === 'friends' ? undefined : selectedMatch._id,
+        senderId: user.id,
+        receiverId: selectedMatch._id,
+        content: '',
+        gifUrl,
+        timestamp: new Date(),
+        reactions: {}
+      };
+
+      setMessages(prevMessages => [...prevMessages, messageData]);
+      setMessageCount(prevCount => prevCount + 1);
+
+      socketRef.current.emit('send message', messageData, (acknowledgement: MessageAcknowledgement) => {
+        if (acknowledgement.success && acknowledgement.message) {
+          setMessages(prevMessages => 
+            prevMessages.map(msg => msg._id === tempId ? acknowledgement.message! : msg)
+          );
+        } else {
+          setMessages(prevMessages => prevMessages.filter(msg => msg._id !== tempId));
+          setMessageCount(prevCount => prevCount - 1);
+          toast({
+            title: "Error",
+            description: acknowledgement.error || "Failed to send GIF. Please try again.",
+            variant: "destructive",
+          });
+        }
+      });
+    } else {
+      toast({
+        title: "Error",
+        description: "Unable to send GIF: connection not established.",
+        variant: "destructive",
+      });
+    }
+  }, [socketRef, user, selectedMatch, toast]);
+
+  const respondToFriendship = useCallback((matchId: string, accept: boolean): Promise<void> => {
+    return new Promise((resolve, reject) => {
+      if (socketRef.current && user && selectedMatch) {
+        socketRef.current.emit('friendship response', { matchId, userId: user.id, accept }, (response: { success: boolean, error?: string }) => {
+          if (response.success) {
+            resolve();
+          } else {
+            reject(new Error(response.error || 'Failed to respond to friendship request'));
+          }
+        });
+      } else {
+        reject(new Error('Unable to respond to friendship request'));
+      }
+    });
+  }, [socketRef, user, selectedMatch]);
 
   const togglePotentialMatches = useCallback(() => {
     setShowPotentialMatches(prev => !prev);
@@ -209,6 +378,7 @@ export const useChat = (initialMatches: Match[]) => {
 
   return {
     matches,
+    setMatches,
     selectedMatch,
     messages,
     timeLeft,
@@ -217,10 +387,16 @@ export const useChat = (initialMatches: Match[]) => {
     showPotentialMatches,
     isLoadingMessages,
     friendshipStatus,
+    reactions,
     handleSelectMatch,
     sendMessage,
+    sendReaction,
+    sendGif,
     requestFriendship,
     respondToFriendship,
     togglePotentialMatches,
+    fetchMessages
   };
 };
+
+export default useChat;

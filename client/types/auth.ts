@@ -14,7 +14,7 @@ export interface User {
   }
 
   export interface RegisterFormProps {
-    onSubmit: (username: string, email: string, password: string) => void;
+    onSubmit: (username: string, email: string, password: string, gender: string, age: number, purpose: string) => void;
     error: string;
   }
   
@@ -22,6 +22,9 @@ export interface User {
     username: string;
     email: string;
     password: string;
+    gender: string;
+    age: number;
+    purpose: string;
   }
 
   export interface LoginFormProps {

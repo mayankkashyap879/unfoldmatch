@@ -3,7 +3,7 @@
 import mongoose, { Schema, Document, CallbackWithoutResultAndOptionalError } from 'mongoose';
 import { TimestampedDocument } from '../types/modelTypes';
 import { UserPurpose, GenderType, USER_PURPOSES, GENDER_TYPES } from '../constants/modelEnums';
-import { userValidationSchema } from '../validation/userValidation';
+import { userValidationSchema, UserValidationSchema } from '../validation/userValidation';
 import { hashPassword, comparePasswords } from '../services/authService';
 
 export interface IUser extends TimestampedDocument {
@@ -34,22 +34,22 @@ const UserSchema: Schema = new Schema({
   username: { type: String, required: true, unique: true },
   email: { type: String, required: true, unique: true },
   password: { type: String, required: true },
-  bio: { type: String },
-  interests: [{ type: String }],
-  purpose: { type: String, enum: USER_PURPOSES },
-  age: { type: Number },
-  gender: { type: String, enum: GENDER_TYPES },
+  bio: { type: String, default: '' },
+  interests: [{ type: String, default: [] }],
+  purpose: { type: String, enum: USER_PURPOSES, required: true },
+  age: { type: Number, required: true },
+  gender: { type: String, enum: GENDER_TYPES, required: true },
   searchGlobally: { type: Boolean, default: true },
-  country: { type: String },
-  personalityType: { type: String },
+  country: { type: String, default: '' },
+  personalityType: { type: String, default: '' },
   preferences: {
     ageRange: {
       min: { type: Number, default: 18 },
       max: { type: Number, default: 50 }
     },
-    genderPreference: [{ type: String, enum: GENDER_TYPES }]
+    genderPreference: [{ type: String, enum: GENDER_TYPES, default: [] }]
   },
-  friends: [{ type: Schema.Types.ObjectId, ref: 'User' }],
+  friends: [{ type: Schema.Types.ObjectId, ref: 'User', default: [] }],
 }, { timestamps: true });
 
 UserSchema.pre('save', async function(this: IUser & Document, next: CallbackWithoutResultAndOptionalError) {
@@ -67,8 +67,25 @@ UserSchema.methods.comparePassword = async function(this: IUser, candidatePasswo
   return comparePasswords(candidatePassword, this.password);
 };
 
-UserSchema.path('age').validate(userValidationSchema.age.validate.validator, userValidationSchema.age.validate.message);
-UserSchema.path('email').validate(userValidationSchema.email.validate.validator, userValidationSchema.email.validate.message);
-UserSchema.path('bio').validate(userValidationSchema.bio.validate.validator, userValidationSchema.bio.validate.message);
+// Apply all validations from userValidationSchema
+(Object.keys(userValidationSchema) as Array<keyof UserValidationSchema>).forEach((path) => {
+  if (userValidationSchema[path].validate) {
+    UserSchema.path(path).validate(
+      userValidationSchema[path].validate.validator,
+      userValidationSchema[path].validate.message
+    );
+  }
+});
+
+// Additional validations
+UserSchema.path('username').validate(async function(username: string) {
+  const userCount = await mongoose.models.User.countDocuments({ username });
+  return !userCount;
+}, 'Username already exists');
+
+UserSchema.path('email').validate(async function(email: string) {
+  const userCount = await mongoose.models.User.countDocuments({ email });
+  return !userCount;
+}, 'Email already exists');
 
 export const User = mongoose.model<IUser>('User', UserSchema);

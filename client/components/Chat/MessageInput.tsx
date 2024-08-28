@@ -4,10 +4,26 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Send } from "lucide-react";
 import { MessageInputProps } from '@/types/chat';
-import { useMessageInput } from '@/hooks/useMessageInput';
 
 const MessageInput: React.FC<MessageInputProps> = ({ onSendMessage }: MessageInputProps) => {
-  const { newMessage, handleInputChange, handleKeyPress, handleSendMessage } = useMessageInput(onSendMessage);
+  const [newMessage, setNewMessage] = React.useState('');
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setNewMessage(e.target.value);
+  };
+
+  const handleSendMessage = () => {
+    if (newMessage.trim()) {
+      onSendMessage(newMessage);
+      setNewMessage('');
+    }
+  };
+
+  const handleKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter') {
+      handleSendMessage();
+    }
+  };
 
   return (
     <div className="p-2 flex">

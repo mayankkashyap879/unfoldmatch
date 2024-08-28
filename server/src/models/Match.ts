@@ -1,4 +1,4 @@
-// server/models/Match.ts
+// server/src/models/Match.ts
 
 import mongoose, { Schema } from 'mongoose';
 import { TimestampedDocument } from '../types/modelTypes';
@@ -9,8 +9,9 @@ export interface IMatch extends TimestampedDocument {
   users: mongoose.Types.ObjectId[];
   status: MatchStatus;
   messageCount: number;
-  friendshipInitiator: mongoose.Types.ObjectId;
+  friendshipInitiator?: mongoose.Types.ObjectId | null;
   expiresAt: Date;
+  compatibilityScore: number;
 }
 
 const MatchSchema: Schema = new Schema({
@@ -21,8 +22,9 @@ const MatchSchema: Schema = new Schema({
     default: 'active'
   },
   messageCount: { type: Number, default: 0 },
-  friendshipInitiator: { type: Schema.Types.ObjectId, ref: 'User' },
-  expiresAt: { type: Date, required: true }
+  friendshipInitiator: { type: mongoose.Schema.Types.ObjectId, ref: 'User', default: null },
+  expiresAt: { type: Date, required: true },
+  compatibilityScore: { type: Number, required: false, min: 0, max: 100 },
 }, { timestamps: true });
 
 export const Match = mongoose.model<IMatch>('Match', MatchSchema);

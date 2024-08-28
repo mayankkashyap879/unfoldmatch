@@ -3,10 +3,11 @@
 import React from 'react';
 import { RegisterFormProps } from '../../types/auth';
 import { useRegisterForm } from '../../hooks/useRegisterForm';
+import { GENDER_TYPES, USER_PURPOSES, GenderType, UserPurpose } from '@/utils/constants';
 
-export const RegisterForm: React.FC<RegisterFormProps> = ({ onSubmit, error } : RegisterFormProps) => {
+export const RegisterForm: React.FC<RegisterFormProps> = ({ onSubmit, error }: RegisterFormProps) => {
   const { formData, handleChange, handleSubmit } = useRegisterForm((data) => {
-    onSubmit(data.username, data.email, data.password);
+    onSubmit(data.username, data.email, data.password, data.gender, data.age, data.purpose);
   });
 
   return (
@@ -54,11 +55,68 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ onSubmit, error } : 
             type="password"
             autoComplete="new-password"
             required
-            className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-b-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
+            className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
             placeholder="Password"
             value={formData.password}
             onChange={handleChange}
           />
+        </div>
+        <div>
+          <label htmlFor="gender" className="sr-only">
+            Gender
+          </label>
+          <select
+            id="gender"
+            name="gender"
+            required
+            className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
+            value={formData.gender}
+            onChange={handleChange}
+          >
+            <option value="">Select Gender</option>
+            {GENDER_TYPES.map((gender) => (
+              <option key={gender} value={gender}>
+                {gender}
+              </option>
+            ))}
+          </select>
+        </div>
+        <div>
+          <label htmlFor="age" className="sr-only">
+            Age
+          </label>
+          <input
+            id="age"
+            name="age"
+            type="number"
+            required
+            min="18"
+            max="100"
+            className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
+            placeholder="Age"
+            value={formData.age}
+            onChange={handleChange}
+          />
+        </div>
+        <div>
+          <label htmlFor="purpose" className="sr-only">
+            Purpose
+          </label>
+          <select
+            id="purpose"
+            name="purpose"
+            required
+            className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-b-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
+            value={formData.purpose}
+            onChange={handleChange}
+          >
+            <option value="">Select Purpose</option>
+            {USER_PURPOSES.map((purpose) => (
+              <option key={purpose} value={purpose}>
+                {purpose}
+              </option>
+            ))}
+          </select>
         </div>
       </div>
 

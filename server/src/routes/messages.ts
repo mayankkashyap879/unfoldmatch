@@ -1,11 +1,12 @@
 // server/routes/messages.ts
 
 import express from 'express';
-import { getMessages } from '../controllers/messageController';
+import { getMessagesByMatchId, getMessagesBetweenUsers } from '../controllers/messageController';
 import auth from '../middleware/auth';
 
 const router = express.Router();
 
-router.get('/:matchId', auth, getMessages);
+router.get('/match/:matchId', auth, getMessagesByMatchId);
+router.get('/friend/:friendId/:userId', auth, getMessagesBetweenUsers);
 
 export default router;
